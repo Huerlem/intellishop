@@ -1,0 +1,193 @@
+import OpenAI from 'openai';
+import { logUserAction } from '@/firebase/firestoreHelpers'; 
+import { handleError } from '@/errors/errorHandler';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+
+// Get API key from Expo environment variables (SDK 50+)
+const OPENAI_API_KEY = process.env.EXPO_PUBLIC_OPENAI_API_KEY;
+
+// Variables to control request rate
+let requestCount = 0;
+let lastRequestTime = 0;
+const MAX_REQUESTS_PER_MINUTE = 10;
+const REQUEST_RESET_TIME = 60000; // 1 minute
+
+// Single instance of OpenAI client
+let openaiInstance = null;
+
+/**
+ * Initialize or return instance of OpenAI client
+ * @returns {OpenAI} configured OpenAI client
+ */
+export const getOpenAIService = () => {
+    if (!openaiInstance) {
+        if (!OPENAI_API_KEY) {
+            throw new Error('OpenAI API key is not configured');
+        }
+    
+        openaiInstance = new OpenAI({
+            apiKey: OPENAI_API_KEY,
+            dangerouslyAllowBrowser: true,
+        });
+    }
+    return openaiInstance;
+};
+
+/**
+ * Checks whether a request can be made based on the rate limit
+ * @returns {boolean} true if the request is permitted 
+ */
+const canMakeRequest = () => {
+    const now = Date.now();
+
+    // Reset the counter after the time period
+    if (now - lastRequestTime > REQUEST_RESET_TIME) {
+        requestCount = 0;
+        lastRequestTime = now;
+        return true;
+    }
+
+    // Check if the request limit has been exceeded
+    if (requestCount >= MAX_REQUESTS_PER_MINUTE) return false;
+    requestCount++;
+    lastRequestTime = now;
+    return true;
+};
+
+/**
+ * Generate personalized greeting for user
+ * @param {string} userId - user id
+ * @param {string} userName - user name
+ * @param {number} lowStockCount - quantity of items with low stock
+ * @returns {Promise<string>} generated greeting
+ */
+export const generateGreeting = async (userId, userName, lowStockCount = 0) => {
+    try {
+        const cacheKey = `greeting_${userId}`;
+        const cachedGreeting = await AsyncStorage.getItem(cacheKey);
+
+        if (cachedGreeting) {
+            return cachedGreeting; // Return cached greeting
+        }
+
+        if (!canMakeRequest()) {
+            throw new Error('Rate limit exceeded for AI requests');
+        }
+
+        const openai = getOpenAIService();
+        const timeOfDay = getTimeOfDay();
+
+        const promptContent = `Create a friendly and casual greeting for a shopping list app user.
+            Time: ${timeOfDay}
+            User name: ${userName || 'there'}
+            Low stock items: ${lowStockCount}
+            Keep it short (maximum 2 sentences), warm and helpful. If there are low stock items, mention it generally but don't specify which items.
+            Suggest that they check the stock section if needed.`;
+
+        const response = await openai.chat.completions.create({
+            model: "gpt-3.5-turbo",
+            messages: [
+                { role: "system", content: "You are a helpful AI assistant for a shopping list app called IntelliShop." },
+                { role: "user", content: promptContent }
+            ],
+            max_tokens: 100,
+            temperature: 0.7,
+        });
+
+        const greeting = response.choices[0].message.content.trim();
+
+        // Cache for 6 hours
+        await AsyncStorage.setItem(cacheKey, greeting);
+        setTimeout(() => AsyncStorage.removeItem(cacheKey), 6 * 60 * 60 * 1000); // Optional: cleanup after 6h
+
+        logUserAction(userId, 'ai_greeting_generated', {
+            timeOfDay,
+            lowStockCount,
+            greeting
+        }).catch(error => console.error('Failed to log greeting generation:', error));
+
+        return greeting;
+
+    } catch (error) {
+        handleError(error, { title: 'Error generating greeting', silent: true });
+
+        return userName
+            ? `Hello ${userName}! Welcome to IntelliShop.`
+            : 'Hello there! Welcome to IntelliShop.';
+    }
+};
+
+/**
+ * Determines the time of day (morning, afternoon, evening)
+ * @returns {string} time of day
+ */
+const getTimeOfDay = () => {
+    const hour = new Date().getHours();
+    if (hour >= 5 && hour < 12) return 'morning';
+    if (hour >= 12 && hour < 18) return 'afternoon';
+    return 'evening';
+};
+
+/**
+ * Generates a friendly error message from a technical message
+ * @param {string} errorMessage - technical error message
+ * @returns {Promise<string>} friendly message
+ */
+export const generateFriendlyErrorMessage = async (errorMessage) => {
+    try {
+        if (!canMakeRequest()) {
+            return "Something went wrong. Please try again later.";
+        }
+
+        const openai = getOpenAIService();
+
+        const promptContent = `Convert this technical error message into a friendly, easy-to-understand message for a non-technical user of a shopping list app:
+            "${errorMessage}"
+        
+            Keep it short, friendly, and reassuring. Don't mention technical details like API, database, etc.`;
+
+        const response = await openai.chat.completions.create({
+            model: "gpt-3.5-turbo",
+            messages: [
+                { role: "system", content: "You are a helpful AI assistant that translates technical errors into friendly messages." },
+                { role: "user", content: promptContent }
+            ],
+            max_tokens: 100,
+            temperature: 0.7,
+        });
+
+        return response.choices[0].message.content.trim();
+    } catch (error) {
+        console.error('Error generating friendly error message:', error);
+        return "Something went wrong. Please try again later.";
+    }
+};
+
+/**
+ * Extract valid JSON from a string
+ * @param {string} text - text with JSON
+ * @returns {Object|Array|null} JSON object or null
+ */
+const extractJsonFromString = (text) => {
+    try {
+        // Try to find first '[' and last ']' for arrays
+        let startIndex = text.indexOf('[');
+        let endIndex = text.lastIndexOf(']') + 1;
+
+        if (startIndex === -1) {
+            // Try to find the first '{' and last '}' for objects
+            startIndex = text.indexOf('{');
+            endIndex = text.lastIndexOf('}') + 1;
+        }
+
+        if (startIndex === -1 || endIndex === 0) {
+            return null;
+        }
+
+        const jsonStr = text.substring(startIndex, endIndex);
+        return JSON.parse(jsonStr);
+    } catch (error) {
+        console.error('Error extracting JSON:', error);
+        return null;
+    }
+};

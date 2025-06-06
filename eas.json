@@ -1,0 +1,28 @@
+{
+  "cli": {
+    "version": ">= 15.0.10",
+    "appVersionSource": "remote"
+  },
+  "build": {
+    "development": {
+      "developmentClient": true,
+      "distribution": "internal"
+    },
+    "preview": {
+      "distribution": "internal"
+    },
+    "production": {
+      "autoIncrement": true,
+      "env": {
+        "EXPO_PUBLIC_GEMINI_API_KEY": "AIzaSyBMVGS1752hC2E-wgyMZ9Ta8-HHnn8ZBMM",
+        "EXPO_PUBLIC_RAPID_API_KEY": "3fd62cb159mshe99c646334f6230p19c4d5jsnac88324e76b8",
+        "EXPO_PUBLIC_APIFY_KEY": "apify_api_wY6K2bJLTmSvpGLto61BBrZtnkVS1H0bsrwB",
+        "EXPO_PUBLIC_SPOONACULAR_API_KEY": "e741aaed71d44ad8bd5acd7efe4fa91f",
+        "EXPO_PUBLIC_FOODDATA_API_KEY": "4gaf8jJQaA6uZIQrBoXoBzuJ1eFpia5PVoLP2WS5"
+      }
+    }
+  },
+  "submit": {
+    "production": {}
+  }
+}

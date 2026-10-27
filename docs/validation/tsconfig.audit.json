@@ -1,0 +1,2 @@
+{ "compilerOptions": { "allowJs": true, "checkJs": true, "noEmit": true, "jsx": "preserve", "module": "esnext", "moduleResolution": "bundler", "target": "es2022", "paths": { "@/*": ["../../*"] }, "skipLibCheck": true, "types": [] },
+  "include": ["../../app/**/*", "../../components/**/*", "../../context/**/*", "../../hooks/**/*", "../../services/**/*", "../../lib/**/*", "../../firebase/**/*", "../../errors/**/*", "../../utils/**/*", "../../constants/**/*", "../../*.js"] }

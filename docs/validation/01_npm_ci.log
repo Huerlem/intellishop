@@ -1,0 +1,6 @@
+$ npm ci --no-audit --no-fund  (via proxy, strict-ssl=true, cafile=/root/.ccr/ca-bundle.crt)
+Tue Oct 27 19:04:28 UTC 2026
+(node:205) MaxListenersExceededWarning: Possible EventEmitter memory leak detected. 11 socket listeners added to [ClientRequest]. MaxListeners is 10. Use emitter.setMaxListeners() to increase limit
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+--- Tue Oct 27 19:15:28 UTC 2026 TERMINATED BY OPERATOR (Vesper) after ~11 min of continuous connect_rejected (HTTP 403) from the egress proxy for registry.npmjs.org. npm produced no exit status of its own; the wrapping background task reported exit 144 (signal). See 03_npm_registry_probe.log for a deterministic reproduction (EXIT_STATUS=1, E403).

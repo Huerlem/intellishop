@@ -1,0 +1,19 @@
+# gitleaks configuration for IntelliShop
+# Extends the default rule set and adds project-specific rules.
+
+[extend]
+useDefault = true
+
+# Any EXPO_PUBLIC_* variable whose name suggests a private credential is a leak,
+# because EXPO_PUBLIC_* values are compiled into the app bundle.
+[[rules]]
+id = "expo-public-private-credential"
+description = "Private-looking credential in an EXPO_PUBLIC_* variable"
+regex = '''EXPO_PUBLIC_[A-Z0-9_]*(?:SECRET|PRIVATE|TOKEN|GEMINI|OPENAI|ANTHROPIC|RAPID|APIFY|SPOONACULAR|FOODDATA|SCRAPE)[A-Z0-9_]*["']?\s*[:=]\s*["']?[A-Za-z0-9_\-]{12,}'''
+keywords = ["expo_public_"]
+
+[allowlist]
+description = "Documentation placeholders"
+paths = [
+  '''\.env\.example$''',
+]

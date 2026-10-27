@@ -1,0 +1,15 @@
+$ security configuration checks  Tue Oct 27 19:20:35 UTC 2026
+eas.json: valid JSON
+EXIT_STATUS=0
+.gitleaks.toml: valid TOML, rules: 1
+EXIT_STATUS=0
+secret-scan.yml: valid YAML
+EXIT_STATUS=0
+--- eas.json on this branch contains EXPO_PUBLIC_ entries: 0
+--- custom rule vs main:eas.json (baseline) — match count (values not printed):
+5 matches expected 5
+--- custom rule vs branch eas.json and .env.example:
+0 matches expected 0
+--- .gitignore excludes .env.local / keeps .env.example:
+.env.local ignored: yes
+.env.example ignored: no (good)

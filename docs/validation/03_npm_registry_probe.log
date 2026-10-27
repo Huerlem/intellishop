@@ -1,0 +1,23 @@
+$ npm view yup version  (via proxy, strict-ssl=true, cafile=/root/.ccr/ca-bundle.crt)
+Tue Oct 27 19:15:06 UTC 2026
+npm error code E403
+npm error 403 403 Forbidden - GET https://registry.npmjs.org/yup
+npm error 403 In most cases, you or one of your dependencies are requesting
+npm error 403 a package version that is forbidden by your security policy, or
+npm error 403 on a server you do not have access to.
+EXIT_STATUS=1
+
+$ npm view yup version  (direct, no proxy — registry is in the environment's NO_PROXY list)
+npm error code ENOTFOUND
+npm error syscall getaddrinfo
+npm error errno ENOTFOUND
+npm error network request to https://registry.npmjs.org/yup failed, reason: getaddrinfo ENOTFOUND registry.npmjs.org
+npm error network This is a problem related to network connectivity.
+npm error network In most cases you are behind a proxy or have bad network settings.
+npm error network
+npm error network If you are behind a proxy, please make sure that the
+npm error network 'proxy' config is set properly.  See: 'npm help config'
+EXIT_STATUS=1
+
+$ curl proxy status: recent relay failures
+20 recent registry.npmjs.org failures; sample: {"ts": "2026-10-27T19:15:10.007Z", "kind": "connect_rejected", "detail": "gateway answered 403 to CONNECT (policy denial or upstream failure)", "host": "registry.npmjs.org:443"}

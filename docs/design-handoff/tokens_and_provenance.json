@@ -1,0 +1,32 @@
+{
+  "sources": {
+    "figma": "https://www.figma.com/design/VZj2AU8kOJqYvyjp8AvWQa/IntelliShop-%E2%80%94-Product-Redesign-2026",
+    "github": "https://github.com/Huerlem/intellishop"
+  },
+  "figma_approved_colors": {
+    "action/primary": "#4338CA",
+    "action/pressed": "#3730A3",
+    "action/subtle": "#EEF2FF",
+    "intelligence/base": "#0891B2",
+    "intelligence/subtle": "#ECFEFF",
+    "brand/accent": "#7C3AED",
+    "brand/subtle": "#F5F3FF",
+    "content/primary": "#0F172A",
+    "content/secondary": "#475569",
+    "content/muted": "#64748B",
+    "border/default": "#CBD5E1",
+    "surface/canvas": "#F8FAFC",
+    "surface/card": "#FFFFFF",
+    "status/success": "#15803D",
+    "status/warning": "#B45309",
+    "status/error": "#B91C1C",
+    "status/information": "#2563EB"
+  },
+  "tabs": [
+    "Home",
+    "Lists",
+    "Pantry"
+  ],
+  "assets_07_08": "concept only, not production files",
+  "font_values": "obtain from Figma text styles; do not assume"
+}

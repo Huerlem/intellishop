@@ -161,6 +161,25 @@ Page 20 marks these as intentionally static ("not designed/approved"). They are 
 | `services/geminiService.js` (a misplaced screen copy) | Remove |
 | `App.js`, `index.js` (unused; entry is `expo-router/entry`) | Remove |
 
-## 8. Visual direction (concept 07/08)
+## 8. Monetisation additions (new requirement, 2026-10-27) — all **Missing + Clarify**
+
+None of these exist in Figma V2 or in code. They must extend the approved Indigo/Cyan/Violet system and existing components, keep Home | Lists | Pantry as the only tabs, and be designed and approved before implementation.
+
+| # | Screen / state | Entry points | Built from components | Notes |
+|---|---|---|---|---|
+| M1 | Plan selection / paywall (Standard vs Premium, monthly) | Upgrade prompts, Settings | Info Card, Badge (Rationale), Button Primary/Secondary | Apple-localised price and period; billed amount most prominent; Restore Purchases; Privacy Policy + Terms (EULA) links; annual toggle later |
+| M2 | Feature comparison (Free / Standard / Premium) | Paywall "Compare plans" | List Item, Badge | Price comparison row shown only when a licensed provider is live |
+| M3 | Free AI credit counter | Recipe entry point (Pantry "Use What I Have"), recipe results | Badge (Info), Caption | "2 of 3 free AI recipes remaining" |
+| M4 | Trial-exhausted upgrade prompt | After 3rd successful generation; on next attempt | Alert (Info), Button | Contextual; saved recipes remain reachable |
+| M5 | Premium-locked states | Optimise List (P02/P04), Compare Stores (P05/P06), substitutions | Recommendation Card disabled + lock, Info Card | Explains what Premium adds; no dead ends |
+| M6 | Free capacity limit reached | Create list (3rd), add item (21st), add pantry item (31st) | Alert (Warning) | Data never hidden; offers archive/delete or upgrade |
+| M7 | Subscription status in Settings | Profile via avatar | List Item, Badge (Success/Warning) | Plan, renewal/expiry date, billing issue state, AI usage this month |
+| M8 | Restore Purchases | Settings, paywall | Button Tertiary + result Alert | Success / nothing to restore / error |
+| M9 | Manage Subscription | Settings | Button Secondary | Opens Apple subscription management |
+| M10 | Purchase confirming / failed / pending | After purchase | Progress, Alert | "Confirming your purchase…" until server entitlement is written |
+| M11 | Account deletion with active subscription warning | Settings → Delete account | Alert (Error), Button Destructive | Explains that Apple subscriptions must be cancelled separately |
+| M12 | First-recipe onboarding (no stored ingredients) | Recipe entry with empty Pantry and no list | Input Search, List Item, Button | Saves real Pantry items, then generates |
+
+## 9. Visual direction (concept 07/08)
 
 The concept boards are inspiration for food imagery and icon friendliness only (README priority 3). They are **not** applied in this matrix. A separate comparison/migration proposal (green/cream reskin vs approved indigo/cyan/violet) is a later deliverable and will not be presented as approved. Current instruction: implement the approved indigo/cyan/violet system. Note the concept screens show live-looking retailer prices and logos (Tesco, Sainsbury's, ASDA, Morrisons, Ocado); these must not appear in the product without licensed data and trademark clearance.

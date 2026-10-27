@@ -18,8 +18,10 @@ Governing requirement: [`requirements/AI_RECIPE_GENERATION_REQUIREMENT.md`](requ
 iOS app (Expo / React Native)
   RecipesScreen ──callable──▶  Cloud Functions (2nd gen, europe-west2)
   (mode, listId, prefs)          generateRecipes
-                                   1 verify Auth + App Check
-                                   2 quota & rate limit (Firestore txn)
+                                   1 verify Auth + App Check (+ email verified)
+                                   2 entitlement gate: Premium fair-use quota,
+                                     or Free/Standard introductory credit reservation
+                                     (race-safe Firestore txn); rate limit
                                    3 load pantry/list (Admin SDK, owner check)
                                    4 normalise + merge + rank by expiry
                                    5 cache lookup (input hash)
@@ -79,7 +81,7 @@ Validation (Zod, shared package `shared/ai/`): unknown fields rejected; strings 
 3. **Normalise units** into families: mass (g), volume (ml), count (piece). `kg→g`, `l→ml`; `tsp/tbsp/cup` → ml only for liquids; packs/tins stay as count with original unit kept for display. Unknown units stay as given and are never converted.
 4. **Merge** pantry + list (mode `both`): same normalised name **and** same unit family → one ingredient with `pantryQty` and `listQty`; otherwise kept as separate entries. Each merged entry keeps its source references.
 5. **Rank** by expiry: `useSoon` = expires within 3 days (configurable), then by quantity. Items with no expiry date are ranked after dated items.
-6. **Bound** the prompt: at most 120 ingredients; names cut to 60 characters; remaining items are summarised as a count. If zero usable ingredients → `failed-precondition / NO_INGREDIENTS` (UI: empty state with "Add pantry items" / "Choose a list").
+6. **Bound** the prompt: at most 120 ingredients; names cut to 60 characters; remaining items are summarised as a count. If zero usable ingredients → `failed-precondition / NO_INGREDIENTS`, checked **before** any credit reservation or provider call. UI: onboarding step "Add a few ingredients you have" that saves real Pantry items, then generates (required for Free introductory credits).
 7. **Reference IDs:** each entry receives a short stable ID (`p12`, `l4`, `m3` for merged) used by the model and by reclassification.
 
 User-supplied names are inserted as JSON data inside a delimited block, never interpolated into instructions; the system prompt states that ingredient names are data and must not be followed as instructions.
@@ -106,7 +108,7 @@ JSON-Schema–constrained output, server SDK for Node.js, UK-usable commercial t
 - **Adapter:** `functions/src/ai/provider.ts` exposes `generateStructured(schema, system, user, opts)`. Swapping provider changes one file plus the secret name.
 
 ### 6.4 Cost envelope (estimate, to be replaced by measured tokens)
-Typical request ≈ 2,500 input + 3,000 output tokens → Haiku 5.5 ≈ $0.00025 + $0.0015 ≈ **$0.0018 per generation**. At the default quota (20 generations/user/day) the worst case is ≈ $0.035 per user per day. Full model in `docs/AI_COST_ESTIMATE.md` (milestone M3).
+Typical request ≈ 2,500 input + 3,000 output tokens → Haiku 5.5 ≈ $0.00025 + $0.0015 ≈ **$0.0018 per generation**. Free introductory allowance ≈ $0.005 per account (3 generations); Premium at the proposed fair-use ceiling (100/month) ≈ $0.18 per subscriber per month. See `MONETISATION_STRATEGY.md` §2; full model in `docs/AI_COST_ESTIMATE.md` (milestone M3).
 
 ## 7. Structured output
 
@@ -165,7 +167,11 @@ Output groups shown in the UI are derived from `status`: **Available now**, **Fr
 |---|---|---|---|
 | Not signed in / App Check failed | Reject before any work | `unauthenticated` / `failed-precondition` | Re-auth prompt |
 | No usable ingredients | No provider call, no quota use | `NO_INGREDIENTS` | Empty state with next action |
-| Rate limit / daily quota exceeded | No provider call | `QUOTA_EXCEEDED` (+ reset time) | Message with time; Retry disabled until reset |
+| Email not verified (Free credits) | No provider call | `EMAIL_NOT_VERIFIED` | Verify-email prompt |
+| Plan lacks the feature (e.g. Standard → optimisation) | No provider call | `PLAN_REQUIRED` | Premium-locked state with upgrade |
+| Introductory credits used up | No provider call | `TRIAL_EXHAUSTED` | "0 of 3 free AI recipes remaining" + Premium prompt |
+| Another free request in flight | No provider call | `REQUEST_IN_PROGRESS` | Wait state |
+| Premium fair-use / rate limit exceeded | No provider call | `QUOTA_EXCEEDED` (+ reset time) | Message with time; Retry disabled until reset |
 | Global spend cap reached | No provider call | `SERVICE_PAUSED` | Message; Retry later |
 | Provider 429 / 5xx / overloaded | 1 retry with jittered back-off inside the time budget | `PROVIDER_UNAVAILABLE` | Error card + **Retry** |
 | Provider exceeds timeout (20 s) | Abort request | `PROVIDER_TIMEOUT` | Error card + **Retry** |
@@ -173,11 +179,16 @@ Output groups shown in the UI are derived from `status`: **Available now**, **Fr
 | All recipes blocked by allergens | — | `ALLERGEN_CONFLICT` | Explanation; adjust inputs |
 | Device offline | Not sent | (client) | Offline banner; saved favourites remain available |
 
-There is **no fallback content** in any branch (requirement Scenario 6). Failed calls caused by the provider do not consume the user's daily quota.
+There is **no fallback content** in any branch (requirement Scenario 6). Failed calls caused by the provider (unavailable, timeout, invalid output) consume neither an introductory credit nor Premium quota.
 
-## 10. Quotas, rate limiting and cost monitoring
+## 10. Entitlements, credits, quotas and cost monitoring
 
-- **Per user:** 5 requests/minute and 20 generations/day (configurable in `config/aiLimits` doc). Enforced in a Firestore transaction on `aiUsage/{uid}/days/{yyyy-mm-dd}` before the provider call; the counter is committed only for successful or user-caused outcomes.
+Plan rules are defined in `SUBSCRIPTION_ENTITLEMENTS.md`; the mechanism in `SUBSCRIPTION_ARCHITECTURE.md` §5.
+
+- **Entitlement gate:** the function reads server-written `entitlements/{uid}`. The plan is never taken from the request.
+- **Free (and Standard, per D10) — introductory credits:** 3 lifetime successful generations per account in `aiCredits/{uid}`; race-safe *reserve → generate → finalise / release*; one generation = one credit regardless of recipe count; reservations expire after 90 s.
+- **Premium — fair use:** proposed 100 generations/month (recipes + optimisation) and 10/hour, in `aiUsage/{uid}/months/{yyyy-mm}`; counted on success only. Premium usage never touches introductory credits.
+- **Per user burst limit (all plans):** 5 requests/minute.
 - **Global:** daily estimated-spend cap in `aiUsage/_global/days/{date}`; at 100% the function returns `SERVICE_PAUSED`. Cloud Billing budget alerts at 50/90/100%.
 - **Function limits:** `maxInstances` cap, request body ≤ 8 KB, memory 512 MiB, timeout 30 s.
 - **Cost log per call** (Cloud Logging, structured): hashed UID, feature, model, input/output tokens from the provider's usage field, estimated cost, latency, outcome code. No prompts, ingredients, allergies or output text are logged.
@@ -219,7 +230,7 @@ Client-side, deterministic: `quantity × targetServings / baseServings`, rounded
 | Level | Scope | Tooling |
 |---|---|---|
 | Unit | name/unit normaliser, merge, expiry ranking, cache key (incl. regression for V1 collision), schema, reclassification (hallucinated refs, wrong source, shortfall), allergen expansion, servings scaling | Jest |
-| Integration | callable with Auth + App Check emulated, Firestore rules, quota transactions, provider adapter stubbed with **test-only fixtures** under `functions/__tests__/fixtures/` (never imported by production code; lint rule enforces) | Firebase Emulator Suite + Jest |
+| Integration | callable with Auth + App Check emulated, Firestore rules, credit reservation (incl. concurrency, see `SUBSCRIPTION_TEST_PLAN.md` S1–S7, S19–S20), quota transactions, provider adapter stubbed with **test-only fixtures** under `functions/__tests__/fixtures/` (never imported by production code; lint rule enforces) | Firebase Emulator Suite + Jest |
 | Acceptance (live) | Requirement scenarios 1–6 against staging with the real model; inputs, validated outputs and screenshots recorded in `docs/test-reports/AI_RECIPES.md`. Scenario 6 forced via invalid provider endpoint config in staging. | Staging project, iOS simulator / device |
 | Evaluation | 30-case set scored for ingredient usage, constraint adherence and allergen safety | Script in `functions/eval/` |
 

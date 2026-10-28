@@ -32,6 +32,8 @@ const ALLOWED_PUBLIC_VARIABLES = new Set([
   'EXPO_PUBLIC_FIREBASE_APP_ID',
   'EXPO_PUBLIC_REVENUECAT_IOS_KEY',
   'EXPO_PUBLIC_APP_CHECK_DEBUG_TOKEN',
+  // Development builds only (firebase/config.js ignores it outside APP_ENV=development).
+  'EXPO_PUBLIC_FIREBASE_EMULATOR_HOST',
 ]);
 
 const SECRET_PATTERNS: [string, RegExp][] = [

@@ -20,7 +20,8 @@
     "legal:report": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/legal/build-legal-site.mjs --report",
     "legal:emit-app": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/legal/build-legal-site.mjs --emit-app",
     "legal:check-app": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/legal/build-legal-site.mjs --check-app",
-    "legal:release": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/legal/build-legal-site.mjs --release"
+    "legal:release": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/legal/build-legal-site.mjs --release",
+    "test:rules": "npx --yes firebase-tools@15.34.1 emulators:exec --only firestore,storage --project demo-intellishop \"npx jest -c jest.rules.config.js --ci\""
   },
   "dependencies": {
     "@expo-google-fonts/inter": "^0.4.2",
@@ -52,6 +53,7 @@
   },
   "devDependencies": {
     "@babel/core": "^7.27.3",
+    "@firebase/rules-unit-testing": "4.0.1",
     "@react-native/jest-preset": "^0.88.0",
     "@testing-library/react-native": "^14.1.0",
     "@types/jest": "^30.0.0",
@@ -70,7 +72,10 @@
     "testPathIgnorePatterns": [
       "/node_modules/",
       "/docs/",
-      "/dist/"
+      "/dist/",
+      "<rootDir>/functions/",
+      "<rootDir>/rules-tests/",
+      "<rootDir>/legal-site/"
     ],
     "transformIgnorePatterns": [
       "node_modules/(?!((jest-)?react-native|@react-native(-community)?)|expo(nent)?|@expo(nent)?/.*|@expo-google-fonts/.*|react-navigation|@react-navigation/.*|firebase|@firebase/.*)"

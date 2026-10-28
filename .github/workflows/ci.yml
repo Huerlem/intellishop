@@ -93,6 +93,11 @@ jobs:
         if: ${{ !cancelled() && steps.install.outcome == 'success' }}
         run: npm test -- --verbose 2>&1 | tee ci-logs/08-tests.log
 
+      - name: In-app legal bundle matches docs/legal (generated file is current)
+        id: legal
+        if: ${{ !cancelled() }}
+        run: npm run legal:check-app 2>&1 | tee ci-logs/08b-legal-bundle.log
+
       - name: Static regression checks (imports, named imports, context contracts, routes)
         id: static
         if: ${{ !cancelled() }}
@@ -148,9 +153,88 @@ jobs:
             echo "| Typecheck | ${{ steps.typecheck.outcome }} |"
             echo "| Lint | ${{ steps.lint.outcome }} |"
             echo "| Tests | ${{ steps.test.outcome }} |"
+            echo "| In-app legal bundle current | ${{ steps.legal.outcome }} |"
             echo "| Static regression checks | ${{ steps.static.outcome }} |"
             echo "| iOS bundle export | ${{ steps.export.outcome }} |"
             echo "| Bundle credential scan | ${{ steps.scan.outcome }} |"
             echo "| npm audit report (non-blocking) | ${{ steps.audit_report.outcome }} |"
             echo "| npm audit gate (high/critical) | ${{ steps.audit_gate.outcome }} |"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+  firebase:
+    # Security Rules tests against the Firebase emulators, and the Cloud Functions build.
+    # Uses a demo project ID (no credentials, nothing deployed).
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Require lockfiles
+        id: lockfiles
+        run: |
+          mkdir -p ci-logs
+          for f in package-lock.json functions/package-lock.json; do
+            if [ ! -f "$f" ]; then
+              echo "::error::$f is missing. Run the 'Generate lockfile' workflow on this branch."
+              exit 1
+            fi
+          done
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: |
+            package-lock.json
+            functions/package-lock.json
+
+      - uses: actions/setup-java@v6
+        with:
+          distribution: temurin
+          java-version: '21'
+
+      - name: Lockfiles resolve only from registry.npmjs.org
+        run: node scripts/check-lockfile-registry.mjs functions/package-lock.json 2>&1 | tee ci-logs/20-functions-lockfile-registry.log
+
+      - name: Install (npm ci, app and functions)
+        id: install
+        run: |
+          npm ci --no-audit --no-fund 2>&1 | tee ci-logs/21-npm-ci.log
+          npm ci --prefix functions --no-audit --no-fund 2>&1 | tee ci-logs/22-functions-npm-ci.log
+
+      - name: Build Cloud Functions (TypeScript)
+        id: functions_build
+        if: ${{ !cancelled() && steps.install.outcome == 'success' }}
+        run: npm --prefix functions run build 2>&1 | tee ci-logs/23-functions-build.log
+
+      - name: Security Rules tests (Firestore + Storage emulators)
+        id: rules
+        if: ${{ !cancelled() && steps.install.outcome == 'success' }}
+        run: npm run test:rules 2>&1 | tee ci-logs/24-rules-tests.log
+
+      - name: npm audit gate, functions production dependencies
+        id: functions_audit
+        if: ${{ !cancelled() && steps.install.outcome == 'success' }}
+        run: npm audit --prefix functions --omit=dev --audit-level=high 2>&1 | tee ci-logs/25-functions-audit.log
+
+      - name: Upload logs
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: firebase-logs
+          path: ci-logs/
+
+      - name: Summary
+        if: always()
+        run: |
+          {
+            echo "## Firebase checks — ${GITHUB_SHA::7}"
+            echo ""
+            echo "| Step | Outcome |"
+            echo "|---|---|"
+            echo "| Lockfiles present | ${{ steps.lockfiles.outcome }} |"
+            echo "| npm ci (app + functions) | ${{ steps.install.outcome }} |"
+            echo "| Functions build | ${{ steps.functions_build.outcome }} |"
+            echo "| Security Rules tests | ${{ steps.rules.outcome }} |"
+            echo "| Functions npm audit gate | ${{ steps.functions_audit.outcome }} |"
           } >> "$GITHUB_STEP_SUMMARY"

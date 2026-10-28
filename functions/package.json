@@ -1,0 +1,21 @@
+{
+  "name": "intellishop-functions",
+  "private": true,
+  "description": "IntelliShop Cloud Functions (2nd gen, europe-west2). Deploying is an owner-approved step.",
+  "main": "lib/functions/src/index.js",
+  "engines": {
+    "node": "22"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit"
+  },
+  "dependencies": {
+    "firebase-admin": "14.5.0",
+    "firebase-functions": "7.4.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "typescript": "~6.0.3"
+  }
+}

@@ -8,6 +8,9 @@ import {
     getUserData,
     updateUserProfile,
     subscribeToAuthState,
+    resendVerificationEmail,
+    reauthenticate as reauthenticateUser,
+    acceptTerms as acceptTermsHelper,
 } from '@/firebase/authHelpers';
 import { handleError, LEGACY_ERROR_LOG_KEY } from '@/errors/errorHandler';
 
@@ -76,14 +79,14 @@ export const AuthProvider = ({ children }) => {
         }
     };
 
-    const register = async (email, password, additionalData) => {
+    const register = async (email, password, { displayName, termsAccepted }) => {
         setLoading(true);
         setError(null);
         try {
-            const result = await registerUser(email, password, additionalData);
+            const result = await registerUser(email, password, { displayName, termsAccepted });
             if (result.success) {
                 setUser(result.user);
-                setUserData(additionalData);
+                setUserData({ displayName, email });
                 return { success: true, user: result.user };
             }
             setError(result.error);
@@ -156,6 +159,28 @@ export const AuthProvider = ({ children }) => {
         }
     };
 
+    /** Reloads the Firebase user so `emailVerified` reflects a link opened in the mail app. */
+    const refreshUser = useCallback(async () => {
+        if (!user) return { success: false };
+        try {
+            await user.reload();
+            setUser(Object.assign(Object.create(Object.getPrototypeOf(user)), user));
+            return { success: true };
+        } catch (err) {
+            return { success: false, error: handleError(err, { silent: true }).message };
+        }
+    }, [user]);
+
+    const acceptTerms = async () => {
+        if (!user) return { success: false };
+        const result = await acceptTermsHelper(user.uid);
+        if (result.success) {
+            const refreshed = await getUserData(user.uid);
+            if (refreshed.success) setUserData(refreshed.userData);
+        }
+        return result;
+    };
+
     return (
         <AuthContext.Provider
             value={{
@@ -171,6 +196,11 @@ export const AuthProvider = ({ children }) => {
                 logout,
                 forgotPassword,
                 updateProfile,
+                refreshUser,
+                resendVerification: resendVerificationEmail,
+                reauthenticate: reauthenticateUser,
+                acceptTerms,
+                emailVerified: !!user?.emailVerified,
                 isAuthenticated: !!user,
             }}
         >

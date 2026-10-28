@@ -1,0 +1,279 @@
+rules_version = '2';
+
+// IntelliShop V2 — Cloud Firestore Security Rules.
+//
+// Principles (docs/compliance/LEGAL_IMPLEMENTATION_CHECKLIST.md L2-03):
+//  * Everything a user owns lives under users/{uid}; only that signed-in user can reach it.
+//  * Server-owned documents (entitlements, usage, consents, dietary preferences, caches, logs)
+//    are read-only or invisible to clients; Cloud Functions write them with the Admin SDK.
+//  * Free-plan limits are enforced here using users/{uid}/meta/counters. A counter can only move
+//    by exactly 1, together with the create/delete/archive of the document it counts, recorded
+//    in `lastOp` (and in `lastItemOp` on a list for its items).
+//  * Every client-written document has a closed set of fields with type and size checks.
+//  * Anything not matched is denied.
+//
+// Tests: rules-tests/firestore.rules.test.ts (run against the emulator in CI).
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ---------- helpers ----------
+    function signedIn() { return request.auth != null; }
+    function isOwner(uid) { return signedIn() && request.auth.uid == uid; }
+
+    function docPath(p) { return /databases/$(database)/documents/$(p); }
+    function countersPath(uid) { return /databases/$(database)/documents/users/$(uid)/meta/counters; }
+    function listPath(uid, listId) { return /databases/$(database)/documents/users/$(uid)/lists/$(listId); }
+    function itemPath(uid, listId, itemId) { return /databases/$(database)/documents/users/$(uid)/lists/$(listId)/items/$(itemId); }
+    function pantryPath(uid, itemId) { return /databases/$(database)/documents/users/$(uid)/pantry/$(itemId); }
+    function entitlementPath(uid) { return /databases/$(database)/documents/entitlements/$(uid); }
+
+    // Plan is written only by Cloud Functions; a missing document means Free.
+    function plan(uid) {
+      return exists(entitlementPath(uid)) ? get(entitlementPath(uid)).data.get('plan', 'free') : 'free';
+    }
+    function isFree(uid) { return plan(uid) == 'free'; }
+
+    // PROVISIONAL Free limits — must match shared/entitlements/plans.ts PLAN_LIMITS.free.
+    function freeActiveLists() { return 2; }
+    function freeItemsPerList() { return 20; }
+    function freePantryItems() { return 30; }
+
+    function str(v, min, max) { return v is string && v.size() >= min && v.size() <= max; }
+    function validName(v, max) { return str(v, 1, max) && v.trim().size() > 0; }
+    function qty(v) { return v is number && v > 0 && v <= 100000; }
+    function qtyOrZero(v) { return v is number && v >= 0 && v <= 100000; }
+    function unit(v) { return v in ['g', 'kg', 'ml', 'l', 'tsp', 'tbsp', 'cup', 'unit', 'dozen', 'pack', 'tin', 'jar', 'bottle', 'bag', 'box']; }
+    function category(v) { return v in ['fruit_veg', 'meat_fish', 'dairy_eggs', 'bakery', 'cupboard', 'frozen', 'drinks', 'household', 'personal_care', 'other']; }
+    function pence(v) { return v == null || (v is int && v >= 0 && v <= 1000000); }
+    function optTimestamp(v) { return v == null || v is timestamp; }
+    function changed() { return request.resource.data.diff(resource.data).affectedKeys(); }
+
+    // ---------- users/{uid} (profile) ----------
+    match /users/{uid} {
+      allow read: if isOwner(uid);
+
+      // Minimal profile only (no phone or address; DATA_FLOW_INVENTORY DF-1).
+      allow create: if isOwner(uid)
+        && request.resource.data.keys().hasOnly(['displayName', 'email', 'createdAt', 'termsVersion', 'termsAcceptedAt', 'privacyNoticeVersion'])
+        && request.resource.data.keys().hasAll(['displayName', 'email', 'createdAt', 'termsVersion', 'termsAcceptedAt'])
+        && str(request.resource.data.displayName, 0, 60)
+        && request.resource.data.email == request.auth.token.email
+        && str(request.resource.data.termsVersion, 1, 20)
+        && request.resource.data.createdAt == request.time
+        && request.resource.data.termsAcceptedAt == request.time;
+
+      allow update: if isOwner(uid)
+        && changed().hasOnly(['displayName', 'photoURL', 'updatedAt', 'termsVersion', 'termsAcceptedAt'])
+        && (!changed().hasAny(['displayName']) || str(request.resource.data.displayName, 0, 60))
+        && (!changed().hasAny(['photoURL']) || request.resource.data.photoURL == null || str(request.resource.data.photoURL, 1, 1024))
+        && (!changed().hasAny(['termsVersion']) || (str(request.resource.data.termsVersion, 1, 20) && request.resource.data.termsAcceptedAt == request.time))
+        && request.resource.data.updatedAt == request.time;
+
+      // Account deletion is performed by the deleteAccount Cloud Function.
+      allow delete: if false;
+
+      // ---------- counters ----------
+      match /meta/counters {
+        allow read: if isOwner(uid);
+        allow create, update: if isOwner(uid) && validCounterWrite(uid);
+        allow delete: if false;
+      }
+
+      function countBefore(field) { return resource == null ? 0 : resource.data.get(field, 0); }
+      function countAfter(field) { return request.resource.data.get(field, 0); }
+
+      function validCounterWrite(uid) {
+        let op = request.resource.data.lastOp;
+        let lists0 = countBefore('activeLists');
+        let lists1 = countAfter('activeLists');
+        let pantry0 = countBefore('pantryItems');
+        let pantry1 = countAfter('pantryItems');
+        return request.resource.data.keys().hasOnly(['activeLists', 'pantryItems', 'lastOp', 'updatedAt'])
+          && request.resource.data.updatedAt == request.time
+          && op is map && op.keys().hasOnly(['type', 'id']) && str(op.id, 1, 128)
+          && lists1 is int && pantry1 is int && lists1 >= 0 && pantry1 >= 0
+          && (
+            (op.type == 'listCreate' && lists1 == lists0 + 1 && pantry1 == pantry0
+              && !exists(listPath(uid, op.id)) && existsAfter(listPath(uid, op.id))
+              && (!isFree(uid) || lists1 <= freeActiveLists()))
+            || (op.type == 'listUnarchive' && lists1 == lists0 + 1 && pantry1 == pantry0
+              && get(listPath(uid, op.id)).data.archived == true && getAfter(listPath(uid, op.id)).data.archived == false
+              && (!isFree(uid) || lists1 <= freeActiveLists()))
+            || (op.type == 'listArchive' && lists1 == lists0 - 1 && pantry1 == pantry0
+              && get(listPath(uid, op.id)).data.archived == false && getAfter(listPath(uid, op.id)).data.archived == true)
+            || (op.type == 'listDelete' && lists1 == lists0 - 1 && pantry1 == pantry0
+              && exists(listPath(uid, op.id)) && !existsAfter(listPath(uid, op.id))
+              && get(listPath(uid, op.id)).data.archived == false)
+            || (op.type == 'pantryAdd' && pantry1 == pantry0 + 1 && lists1 == lists0
+              && !exists(pantryPath(uid, op.id)) && existsAfter(pantryPath(uid, op.id))
+              && (!isFree(uid) || pantry1 <= freePantryItems()))
+            || (op.type == 'pantryRemove' && pantry1 == pantry0 - 1 && lists1 == lists0
+              && exists(pantryPath(uid, op.id)) && !existsAfter(pantryPath(uid, op.id)))
+          );
+      }
+
+      // ---------- lists ----------
+      match /lists/{listId} {
+        allow read: if isOwner(uid);
+
+        allow create: if isOwner(uid)
+          && request.resource.data.keys().hasOnly(['name', 'archived', 'itemCount', 'lastItemOp', 'createdAt', 'updatedAt'])
+          && validName(request.resource.data.name, 40)
+          && request.resource.data.archived == false
+          && request.resource.data.itemCount == 0
+          && request.resource.data.lastItemOp == null
+          && request.resource.data.createdAt == request.time
+          && request.resource.data.updatedAt == request.time
+          && getAfter(countersPath(uid)).data.lastOp.type == 'listCreate'
+          && getAfter(countersPath(uid)).data.lastOp.id == listId;
+
+        allow update: if isOwner(uid)
+          && changed().hasOnly(['name', 'archived', 'itemCount', 'lastItemOp', 'updatedAt'])
+          && validName(request.resource.data.name, 40)
+          && request.resource.data.archived is bool
+          && request.resource.data.updatedAt == request.time
+          && (!changed().hasAny(['archived'])
+              || (getAfter(countersPath(uid)).data.lastOp.id == listId
+                  && getAfter(countersPath(uid)).data.lastOp.type == (request.resource.data.archived ? 'listArchive' : 'listUnarchive')))
+          && (!changed().hasAny(['itemCount']) || validItemCountChange(uid, listId));
+
+        // Archived lists do not count; active lists must release their counter in the same batch.
+        allow delete: if isOwner(uid)
+          && (resource.data.archived == true
+              || (getAfter(countersPath(uid)).data.lastOp.type == 'listDelete' && getAfter(countersPath(uid)).data.lastOp.id == listId));
+
+        function validItemCountChange(uid, listId) {
+          let n0 = resource.data.itemCount;
+          let n1 = request.resource.data.itemCount;
+          let op = request.resource.data.lastItemOp;
+          return n1 is int && n1 >= 0
+            && op is map && op.keys().hasOnly(['type', 'id']) && str(op.id, 1, 128)
+            && (
+              (op.type == 'add' && n1 == n0 + 1
+                && !exists(itemPath(uid, listId, op.id)) && existsAfter(itemPath(uid, listId, op.id))
+                && (!isFree(uid) || n1 <= freeItemsPerList()))
+              || (op.type == 'remove' && n1 == n0 - 1
+                && exists(itemPath(uid, listId, op.id)) && !existsAfter(itemPath(uid, listId, op.id)))
+            );
+        }
+
+        // ---------- list items ----------
+        match /items/{itemId} {
+          allow read: if isOwner(uid);
+
+          allow create: if isOwner(uid)
+            && validItem(request.resource.data)
+            && request.resource.data.checked == false
+            && request.resource.data.createdAt == request.time
+            && request.resource.data.updatedAt == request.time
+            && getAfter(listPath(uid, listId)).data.lastItemOp.type == 'add'
+            && getAfter(listPath(uid, listId)).data.lastItemOp.id == itemId;
+
+          allow update: if isOwner(uid)
+            && changed().hasOnly(['name', 'normalizedName', 'quantity', 'unit', 'category', 'notes', 'checked', 'pricePence', 'updatedAt'])
+            && validItem(request.resource.data)
+            && request.resource.data.updatedAt == request.time;
+
+          // Deleting without decrementing only makes the counter stricter, never looser.
+          allow delete: if isOwner(uid);
+
+          function validItem(d) {
+            return d.keys().hasOnly(['name', 'normalizedName', 'quantity', 'unit', 'category', 'notes', 'checked', 'pricePence', 'createdAt', 'updatedAt'])
+              && validName(d.name, 60) && str(d.normalizedName, 0, 80)
+              && qty(d.quantity) && unit(d.unit) && category(d.category)
+              && str(d.get('notes', ''), 0, 200)
+              && d.checked is bool
+              && pence(d.get('pricePence', null));
+          }
+        }
+      }
+
+      // ---------- pantry ----------
+      match /pantry/{itemId} {
+        allow read: if isOwner(uid);
+
+        allow create: if isOwner(uid)
+          && validPantry(request.resource.data)
+          && request.resource.data.createdAt == request.time
+          && request.resource.data.updatedAt == request.time
+          && getAfter(countersPath(uid)).data.lastOp.type == 'pantryAdd'
+          && getAfter(countersPath(uid)).data.lastOp.id == itemId;
+
+        allow update: if isOwner(uid)
+          && changed().hasOnly(['name', 'normalizedName', 'quantity', 'unit', 'minQuantity', 'category', 'expiryDate', 'expiryKind', 'lastPurchasedAt', 'updatedAt'])
+          && validPantry(request.resource.data)
+          && request.resource.data.updatedAt == request.time;
+
+        allow delete: if isOwner(uid);
+
+        function validPantry(d) {
+          return d.keys().hasOnly(['name', 'normalizedName', 'quantity', 'unit', 'minQuantity', 'category', 'expiryDate', 'expiryKind', 'lastPurchasedAt', 'createdAt', 'updatedAt'])
+            && validName(d.name, 60) && str(d.normalizedName, 0, 80)
+            && qtyOrZero(d.quantity) && unit(d.unit) && qtyOrZero(d.get('minQuantity', 0)) && category(d.category)
+            && optTimestamp(d.get('expiryDate', null))
+            && d.get('expiryKind', null) in [null, 'use_by', 'best_before']
+            && optTimestamp(d.get('lastPurchasedAt', null));
+        }
+      }
+
+      // ---------- shopping trips ----------
+      match /trips/{tripId} {
+        allow read: if isOwner(uid);
+        allow create: if isOwner(uid)
+          && request.resource.data.keys().hasOnly(['listId', 'listName', 'status', 'startedAt', 'finishedAt', 'lines', 'actualTotalPence'])
+          && str(request.resource.data.listId, 1, 128) && str(request.resource.data.listName, 0, 40)
+          && request.resource.data.status == 'active'
+          && request.resource.data.startedAt == request.time
+          && request.resource.data.finishedAt == null
+          && request.resource.data.lines is map && request.resource.data.lines.size() == 0
+          && request.resource.data.actualTotalPence == null;
+        allow update: if isOwner(uid)
+          && resource.data.status == 'active'
+          && changed().hasOnly(['lines', 'status', 'finishedAt', 'actualTotalPence'])
+          && request.resource.data.lines is map && request.resource.data.lines.size() <= 500
+          && request.resource.data.status in ['active', 'finished']
+          && (request.resource.data.status == 'active' || request.resource.data.finishedAt == request.time)
+          && pence(request.resource.data.actualTotalPence);
+        allow delete: if isOwner(uid);
+      }
+
+      // ---------- saved recipes ----------
+      match /favourites/{recipeId} {
+        allow read: if isOwner(uid);
+        allow create: if isOwner(uid)
+          && request.resource.data.keys().hasOnly(['recipe', 'savedAt'])
+          && request.resource.data.recipe is map
+          && request.resource.data.recipe.id == recipeId
+          && request.resource.data.savedAt == request.time;
+        allow update: if false;
+        allow delete: if isOwner(uid);
+      }
+
+      // ---------- server-written (consents, dietary preferences) ----------
+      match /consents/{type} {
+        allow read: if isOwner(uid);
+        allow write: if false;
+      }
+      match /private/{docId} {
+        allow read: if isOwner(uid);
+        allow write: if false;
+      }
+    }
+
+    // ---------- server-owned, user-readable ----------
+    match /entitlements/{uid} {
+      allow read: if isOwner(uid);
+      allow write: if false;
+    }
+    match /usage/{uid} {
+      allow read: if isOwner(uid);
+      allow write: if false;
+    }
+
+    // Everything else (AI cache, deletion log, webhooks, legacy V1 collections) is server-only.
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

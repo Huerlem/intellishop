@@ -1,9 +1,11 @@
 name: CI
 
-# Executable validation for IntelliShop (milestone M1 onwards):
-# install → dependency checks → typecheck → lint → tests → iOS bundle export → bundle secret scan.
-# Every step's output is saved to ci-logs/ and uploaded as an artifact; the job summary lists
-# each step's outcome. No secrets are needed or used by this workflow.
+# Executable validation for IntelliShop (M1 onwards). Requires a committed package-lock.json and
+# always installs with `npm ci`. Steps: lockfile registry check → install → expo install --check →
+# expo-doctor → typecheck → lint → tests → static regression checks → iOS bundle export →
+# bundle credential scan → npm audit (production dependencies).
+# Every step writes its output to ci-logs/ (uploaded as an artifact) and the job summary lists
+# each step's outcome. No secrets are used by this workflow.
 
 on:
   push:
@@ -19,7 +21,7 @@ concurrency:
 
 defaults:
   run:
-    shell: bash  # gives `-eo pipefail`, so `cmd | tee log` fails when cmd fails
+    shell: bash  # bash -eo pipefail: `cmd | tee log` fails when cmd fails
 
 env:
   CI: 'true'
@@ -29,92 +31,102 @@ env:
 jobs:
   verify:
     runs-on: ubuntu-latest
-    timeout-minutes: 40
+    timeout-minutes: 45
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
-      - uses: actions/setup-node@v4
+      - name: Require package-lock.json
+        id: lockfile
+        run: |
+          mkdir -p ci-logs
+          if [ ! -f package-lock.json ]; then
+            echo "::error::package-lock.json is missing. Run the 'Generate lockfile' workflow on this branch (Actions → Generate lockfile → Run workflow); it commits the lockfile and starts CI again."
+            exit 1
+          fi
+
+      - uses: actions/setup-node@v7
         with:
           node-version: 22
+          cache: npm
 
       - name: Record tool versions
         run: |
-          mkdir -p ci-logs
-          { echo "node $(node -v)"; echo "npm $(npm -v)"; echo "commit ${GITHUB_SHA}"; } | tee ci-logs/00-versions.log
+          { echo "node $(node -v)"; echo "npm $(npm -v)"; echo "python $(python3 --version)"; echo "commit ${GITHUB_SHA}"; } | tee ci-logs/00-versions.log
 
-      # With package-lock.json: reproducible `npm ci`.
-      # Without it (first run after the SDK 58 migration): `npm install` generates the lockfile
-      # from the official registry and uploads it as an artifact to be committed.
-      - name: Install dependencies
+      - name: Lockfile resolves only from registry.npmjs.org
+        id: registry
+        run: node scripts/check-lockfile-registry.mjs 2>&1 | tee ci-logs/01-lockfile-registry.log
+
+      - name: Install (npm ci)
         id: install
-        run: |
-          if [ -f package-lock.json ]; then
-            echo "mode=ci" >> "$GITHUB_OUTPUT"
-            npm ci --no-audit --no-fund 2>&1 | tee ci-logs/01-install.log
-          else
-            echo "mode=bootstrap" >> "$GITHUB_OUTPUT"
-            echo "::warning::package-lock.json is missing. Generating it (bootstrap run). Download the 'package-lock' artifact and commit it."
-            npm install --no-audit --no-fund 2>&1 | tee ci-logs/01-install.log
-          fi
-
-      - name: Upload generated lockfile
-        if: steps.install.outputs.mode == 'bootstrap' && steps.install.outcome == 'success'
-        uses: actions/upload-artifact@v4
-        with:
-          name: package-lock
-          path: package-lock.json
+        run: npm ci --no-audit --no-fund 2>&1 | tee ci-logs/02-npm-ci.log
 
       - name: Resolved top-level dependency versions
         id: versions
         if: ${{ !cancelled() && steps.install.outcome == 'success' }}
         continue-on-error: true
-        run: npm ls --depth=0 2>&1 | tee ci-logs/02-dependency-versions.log
+        run: npm ls --depth=0 2>&1 | tee ci-logs/03-dependency-versions.log
 
       - name: Expo SDK compatibility (expo install --check)
         id: expo_check
         if: ${{ !cancelled() && steps.install.outcome == 'success' }}
-        run: npx expo install --check 2>&1 | tee ci-logs/03-expo-install-check.log
+        run: npx expo install --check 2>&1 | tee ci-logs/04-expo-install-check.log
 
-      - name: Expo doctor
+      - name: Expo doctor (reviewed manually; non-blocking)
         id: doctor
         if: ${{ !cancelled() && steps.install.outcome == 'success' }}
         continue-on-error: true
-        run: npx --yes expo-doctor 2>&1 | tee ci-logs/04-expo-doctor.log
+        run: npx expo-doctor 2>&1 | tee ci-logs/05-expo-doctor.log
 
       - name: Typecheck
         id: typecheck
         if: ${{ !cancelled() && steps.install.outcome == 'success' }}
-        run: npm run typecheck 2>&1 | tee ci-logs/05-typecheck.log
+        run: npm run typecheck 2>&1 | tee ci-logs/06-typecheck.log
 
       - name: Lint
         id: lint
         if: ${{ !cancelled() && steps.install.outcome == 'success' }}
-        run: npm run lint 2>&1 | tee ci-logs/06-lint.log
+        run: npm run lint 2>&1 | tee ci-logs/07-lint.log
 
       - name: Unit and integration tests
         id: test
         if: ${{ !cancelled() && steps.install.outcome == 'success' }}
-        run: npm test -- --verbose 2>&1 | tee ci-logs/07-tests.log
+        run: npm test -- --verbose 2>&1 | tee ci-logs/08-tests.log
+
+      - name: Static regression checks (imports, named imports, context contracts, routes)
+        id: static
+        if: ${{ !cancelled() }}
+        run: |
+          {
+            for s in check_imports check_named_imports check_contracts check_routes; do
+              echo "== $s"; python3 -I "scripts/audit/$s.py" .
+            done
+          } 2>&1 | tee ci-logs/09-static-regression.log
 
       - name: Export iOS JS bundle
         id: export
         if: ${{ !cancelled() && steps.install.outcome == 'success' }}
-        run: npm run export:ios 2>&1 | tee ci-logs/08-export-ios.log
+        run: npm run export:ios 2>&1 | tee ci-logs/10-export-ios.log
 
       - name: Scan exported bundle for credentials
         id: scan
         if: ${{ !cancelled() && steps.export.outcome == 'success' }}
-        run: npm run scan:bundle 2>&1 | tee ci-logs/09-bundle-scan.log
+        run: npm run scan:bundle 2>&1 | tee ci-logs/11-bundle-scan.log
 
-      - name: Dependency vulnerability audit (production dependencies)
-        id: audit
+      - name: npm audit, production dependencies (full report; non-blocking)
+        id: audit_report
         if: ${{ !cancelled() && steps.install.outcome == 'success' }}
         continue-on-error: true
-        run: npm audit --omit=dev 2>&1 | tee ci-logs/10-npm-audit.log
+        run: npm audit --omit=dev 2>&1 | tee ci-logs/12-npm-audit.log
+
+      - name: npm audit gate (fails on high or critical production vulnerabilities)
+        id: audit_gate
+        if: ${{ !cancelled() && steps.install.outcome == 'success' }}
+        run: npm audit --omit=dev --audit-level=high 2>&1 | tee ci-logs/13-npm-audit-gate.log
 
       - name: Upload logs
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: ci-logs
           path: ci-logs/
@@ -123,18 +135,22 @@ jobs:
         if: always()
         run: |
           {
-            echo "## IntelliShop CI"
+            echo "## IntelliShop CI — ${GITHUB_SHA::7}"
             echo ""
             echo "| Step | Outcome |"
             echo "|---|---|"
-            echo "| Install (${{ steps.install.outputs.mode }}) | ${{ steps.install.outcome }} |"
+            echo "| package-lock.json present | ${{ steps.lockfile.outcome }} |"
+            echo "| Lockfile registry check | ${{ steps.registry.outcome }} |"
+            echo "| npm ci | ${{ steps.install.outcome }} |"
             echo "| Dependency versions | ${{ steps.versions.outcome }} |"
             echo "| expo install --check | ${{ steps.expo_check.outcome }} |"
-            echo "| expo-doctor (non-blocking) | ${{ steps.doctor.outcome }} |"
+            echo "| expo-doctor (non-blocking, reviewed) | ${{ steps.doctor.outcome }} |"
             echo "| Typecheck | ${{ steps.typecheck.outcome }} |"
             echo "| Lint | ${{ steps.lint.outcome }} |"
             echo "| Tests | ${{ steps.test.outcome }} |"
+            echo "| Static regression checks | ${{ steps.static.outcome }} |"
             echo "| iOS bundle export | ${{ steps.export.outcome }} |"
-            echo "| Bundle secret scan | ${{ steps.scan.outcome }} |"
-            echo "| npm audit (non-blocking) | ${{ steps.audit.outcome }} |"
+            echo "| Bundle credential scan | ${{ steps.scan.outcome }} |"
+            echo "| npm audit report (non-blocking) | ${{ steps.audit_report.outcome }} |"
+            echo "| npm audit gate (high/critical) | ${{ steps.audit_gate.outcome }} |"
           } >> "$GITHUB_STEP_SUMMARY"

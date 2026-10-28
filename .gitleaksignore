@@ -1,0 +1,12 @@
+# Historical findings in commit 0e26321 (Add files via upload, 2025-06-06), already documented in
+# docs/SECURITY_REMEDIATION_PLAN.md (credentials C1–C6). Ignoring them here lets CI fail on NEW leaks
+# without failing forever on history that is not being rewritten. This does NOT mean they are safe:
+# every credential listed there must still be revoked or rotated by the owner.
+# Format: <commit>:<file>:<rule-id>:<line> — no secret values.
+0e2632144190c0fea8d12e29952bb98095fe174c:eas.json:expo-public-private-credential:17
+0e2632144190c0fea8d12e29952bb98095fe174c:eas.json:expo-public-private-credential:18
+0e2632144190c0fea8d12e29952bb98095fe174c:eas.json:expo-public-private-credential:19
+0e2632144190c0fea8d12e29952bb98095fe174c:eas.json:expo-public-private-credential:20
+0e2632144190c0fea8d12e29952bb98095fe174c:eas.json:expo-public-private-credential:21
+0e2632144190c0fea8d12e29952bb98095fe174c:eas.json:gcp-api-key:17
+0e2632144190c0fea8d12e29952bb98095fe174c:firebase/config.js:gcp-api-key:10

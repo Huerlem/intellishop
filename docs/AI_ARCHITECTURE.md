@@ -135,10 +135,12 @@ Recipe {
   usesSoonExpiring: string[]           // ingredient refs
   dietaryTags: string[]                // e.g. 'vegetarian' — model claim, displayed as such
   allergenWarnings: string[]           // filled/overridden by server post-check
-  nutritionEstimate?: {                // optional
-    perServing: { kcal, proteinG, carbsG, fatG }
-    isEstimate: true                   // const
+  nutritionEstimate?: {                // OFF at launch behind flag `ai.nutritionEstimates`
+    perServing: { kcal, proteinG, carbsG, fatG }   // owner decision FS-D1
+    isEstimate: true                   // const; UI label "AI estimate — not verified"
   }
+  // No price, availability, cooking-temperature or storage-time fields
+  // (docs/compliance/FOOD_SAFETY_TECHNICAL_SPEC.md §3.2, §4).
 }
 
 RecipeIngredient {

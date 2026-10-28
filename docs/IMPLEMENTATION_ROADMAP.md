@@ -9,14 +9,16 @@ Each milestone ends with: CI green (typecheck, lint, unit/integration tests, sec
 | ID | Milestone | Depends on | Owner prerequisites | Exit criteria (evidence) |
 |---|---|---|---|---|
 | **M1** *(implemented 2026-10-28; awaiting CI evidence — see `M1_REPORT.md`)* | **Secure, buildable baseline** — remove client AI/price/mock code, dead code, unused deps; Expo SDK upgrade to current (58); TypeScript, lint, Jest, CI; design tokens; Home \| Lists \| Pantry tab shell with auth guard | Package registry access (here or CI) | S1 revocations (in parallel) | CI green; bundle scan T1/T2 PASS; tab shell runs in EAS development build on owner's iPhone; token unit tests |
-| M2 | Backend foundations — dev/staging/prod projects, per-user Firestore model + migration, Security Rules + emulator tests, App Check, Functions codebase, auth fixes, minimal registration, **account deletion + data export**, entitlement doc (`free`), Free capacity counters | M1 | Firebase access + Blaze; decision S2 | Rules tests; deletion/export tests; T3–T5 |
-| M3 | AI recipes through secure backend — 3 modes, normalisation, structured output, reclassification, allergens, cache, favourites, reviewed list changes; **Free introductory credits (3)**; screens C5, M3, M4, M12 | M2; approval of `SUBSCRIPTION_*` docs (D3, D4, D10) | New AI provider key set in staging Secret Manager by owner | Recipe scenarios 1–6 (live, staging); S1–S7, S19–S20; A1–A6 of cloud-secrets doc |
-| M4 | Core V2 screens — Home P01, Lists root C6, List Detail P02, Add Items P03, Pantry P10, pantry management C7; offline behaviour for lists/pantry | M2 (M3 for "Use What I Have" link) | Design approval of C6/C7 proposals | Navigation regression tests; offline tests; visual comparison vs Figma at 440×956, 402×874, 393×852 |
+| M2 | Backend foundations — dev/staging/prod projects, per-user Firestore model + migration, Security Rules + emulator tests, App Check, Functions codebase, auth fixes, minimal registration, **account deletion + data export**, entitlement doc (`free`), Free capacity counters | M1 | Firebase access + Blaze; decision S2 | Rules tests; deletion/export tests; T3–T5; legal tasks L2-01…L2-12 (`compliance/LEGAL_IMPLEMENTATION_CHECKLIST.md`) |
+| M3 | AI recipes through secure backend — 3 modes, normalisation, structured output, reclassification, allergens, cache, favourites, reviewed list changes; **Free introductory credits (3)**; screens C5, M3, M4, M12 | M2; approval of `SUBSCRIPTION_*` docs (D3, D4, D10) | New AI provider key set in staging Secret Manager by owner | Recipe scenarios 1–6 (live, staging); S1–S7, S19–S20; A1–A6 of cloud-secrets doc; AI consent + food-safety tests FT-01…FT-12; signed DPIA (L3-01…L3-07) |
+| M4 | Core V2 screens — Home P01, Lists root C6, List Detail P02, Add Items P03, Pantry P10, pantry management C7; offline behaviour for lists/pantry | M2 (M3 for "Use What I Have" link) | Design approval of C6/C7 proposals | Navigation regression tests; offline tests; visual comparison vs Figma at 440×956, 402×874, 393×852; legal screens L4-01…L4-03 |
 | M5 | Shopping trip — Shopping Mode P07 (+ C8 exceptions), Finish Shopping P08, Pantry Update P09 (additive, reviewable, undoable) | M4 | Design approval of C8 | Journey test P01→P10; no silent destructive updates test |
-| M6 | Subscriptions — RevenueCat, App Store products, webhook + sync + reconciliation, paywall and Settings screens M1–M11, Rules-based limits, downgrade behaviour | M2, M4 | O1–O12 (Apple agreements, banking, tax, products, sandbox testers, RevenueCat) | S1–S26 incl. sandbox purchases on device |
+| M6 | Subscriptions — RevenueCat, App Store products, webhook + sync + reconciliation, paywall and Settings screens M1–M11, Rules-based limits, downgrade behaviour | M2, M4 | O1–O12 (Apple agreements, banking, tax, products, sandbox testers, RevenueCat) | S1–S26 incl. sandbox purchases on device; billing disclosures LS-01…LS-04 |
 | M7 | Premium AI — Optimisation Review P04, substitutions, budget-aware suggestions; Recommended Store / Compare Stores P05/P06 **only** with a licensed provider, otherwise honest no-data state (C3); `API_INTEGRATION_MATRIX.md` | M3, M6 | Provider contract (if any) | P04 accept/reject tests (no silent mutation); no-invented-price tests |
-| M8 | Hardening — accessibility (VoiceOver, Dynamic Type, 44 pt targets, non-colour status), privacy policy + App Privacy labels, logging redaction, performance, crash handling without content | M4–M7 | Privacy policy/EULA hosting | Accessibility checklist; T7; S26 |
+| M8 | Hardening — accessibility (VoiceOver, Dynamic Type, 44 pt targets, non-colour status), App Privacy labels verified against the binary (policy drafting moved earlier — see Legal workstream), logging redaction, performance, crash handling without content | M4–M7 | Privacy policy/EULA hosting | Accessibility checklist; T7; S26; `compliance/LEGAL_RELEASE_GATE.md` all criteria PASS |
 | M9 | Release — icons/launch assets from approved brand, App Store metadata, screenshots from the real build, EAS production build, TestFlight, submission checklist | M8 | Apple account, App Store Connect access | TestFlight build installed and smoke-tested; **no publication without explicit owner approval** |
+
+**Legal & compliance workstream (P0, added 2026-10-28):** runs in parallel from now — `docs/compliance/LEGAL_WORKSTREAM_PLAN.md`. Public documents drafted P1 (now) → P2 (M3) → P3 (M6); engineering tasks folded into M2, M3, M4, M6; release gate in M9.
 
 Visual reskin (green/cream concept) is tracked separately as a proposal and is not part of these milestones unless approved.
 
@@ -103,6 +105,8 @@ scripts/scan-bundle-for-secrets.mjs
 | Account deletion and data export | Brief Phase 7, App Store | CODEBASE_AUDIT §3.2 | M2 | Deletion/export tests; S24 |
 | Accessibility (VoiceOver, Dynamic Type, targets, non-colour status) | Brief Phase 7, Figma 23 | FIGMA matrix §2.5 | M4–M8 | Accessibility checklist |
 | TestFlight / App Store readiness, no auto-publish | Brief Phase 9 | — | M9 | Owner approval gate |
+| Legal, privacy, AI-safety and App Store compliance (UK) | Legal compliance requirement (P0) | `compliance/LEGAL_WORKSTREAM_PLAN.md`, `LEGAL_COMPLIANCE_MATRIX.md` | Docs now; M2, M3, M4, M6, M9 | `LEGAL_RELEASE_GATE.md` G1–G10 |
+| Enforced food-safety protections | Legal compliance requirement §6 | `compliance/FOOD_SAFETY_TECHNICAL_SPEC.md` | M3 | FT-01…FT-12 |
 
 ## 4. Open owner decisions blocking specific milestones
 
@@ -114,3 +118,5 @@ scripts/scan-bundle-for-secrets.mjs
 | D1, D5, D6, D11 and Apple items O1–O12 | M6 |
 | Design approval for C1–C11 and M1–M12 screens | M4–M6 respective screens |
 | Firestore region (London `europe-west2` proposed) | M2 |
+| Legal owner information O-L1…O-L16 (`compliance/LEGAL_WORKSTREAM_PLAN.md` §3) | Final public documents; App Store metadata |
+| DPIA-1, DPIA-2, FS-D1 (allergy storage, religious diets, nutrition estimates) | M3 |

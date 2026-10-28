@@ -43,11 +43,11 @@ export const registerUser = async (email, password, additionalData = {}) => {
  */
 export const loginUser = async (email, password) => {
   try {
-    console.log('Calling signInWithEmailAndPassword:', email);
     const userCredential = await signInWithEmailAndPassword(auth, email, password);
     return { success: true, user: userCredential.user };
   } catch (error) {
-    console.error('Firebase login error:', error);
+    // Log only the error code: messages can contain the email address.
+    console.warn('Firebase login failed:', error?.code);
     return { success: false, error: error.message, code: error.code };
   }
 };
@@ -77,9 +77,10 @@ export const resetPassword = async (email) => {
 };
 
 /**
- * Escuta mudanças no estado de autenticação
+ * Subscribes to Firebase auth state changes. Returns the unsubscribe function.
+ * (Renamed from `useAuthState`: it is not a React hook.)
  */
-export const useAuthState = (callback) => {
+export const subscribeToAuthState = (callback) => {
   const unsubscribe = onAuthStateChanged(auth, callback);
   return unsubscribe;
 };

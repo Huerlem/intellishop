@@ -37,3 +37,16 @@ Alternative that does not depend on this environment: run the same commands in G
 - No feature is reported as working: nothing was executed at runtime.
 - Static findings are labelled FAIL only where the tool output or the source proves the defect.
 - The `npm ci` exit status is reported as "none from npm" because the process was stopped by the operator; the reproducible exit status comes from V1b.
+
+## M1 update (2026-10-28)
+
+The npm registry is still blocked in this environment (`npm view yup version` via proxy → E403, re-checked 2026-10-27 23:45). As authorised, installation, typecheck, lint, tests, iOS bundle export and the bundle secret scan now run in GitHub Actions (`.github/workflows/ci.yml`); M1 is not PASS until that run succeeds. Checks that could run here are recorded in `docs/validation/05_m1_local_checks.log`:
+
+| Check | Result |
+|---|---|
+| Bundle secret scanner self-test (4 cases, expected exit codes 0/1/1/2) | PASS |
+| Python replica of the Jest static-security and token assertions | 17/17 passed (replica, not the Jest run) |
+| TypeScript 7.0.2 syntax / local-import pass over all sources (no `node_modules`) | 0 syntax errors, 0 unresolved local imports, 0 missing exports; one real typing defect found and fixed |
+| `node --check` on JS configs; JSON/YAML parse | PASS |
+
+Expo SDK 58 versions were read from `github.com/expo/expo` branch `sdk-58` (`packages/expo/bundledNativeModules.json`) because the npm registry is unreachable; resolved versions will come from the CI-generated lockfile.

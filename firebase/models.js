@@ -1,4 +1,4 @@
-import { v4 as uuidv4 } from 'uuid';
+import { randomUUID } from 'expo-crypto';
 
 /**
 * This file contains the Firestore database structure for the app
@@ -224,7 +224,7 @@ export const createShoppingListObject = (userId, name, isAIGenerated = false, bu
 
 export const createShoppingItemObject = (name, quantity, unit, estimatedPrice = null, category = '') => {
     return {
-        id: uuidv4(),
+        id: randomUUID(),
         name,
         quantity,
         unit,

@@ -185,7 +185,9 @@ export const handleError = (error, options = {}) => {
 
     //Error register in analytics
     if (logToAnalytics) {
-        logErrorToConsole(errorCode, error instanceof Error ? error.message : errorMessage);
+        // Only the mapped, user-facing message is recorded: raw error messages can contain
+        // personal data (e.g. email addresses).
+        logErrorToConsole(errorCode, errorMessage);
     }
 
     //Show an Alert to user

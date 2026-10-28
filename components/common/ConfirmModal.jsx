@@ -112,7 +112,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
   },
   buttonDefault: {
-    backgroundColor: '#4B0082',
+    backgroundColor: '#4338CA',
   },
   buttonDefaultText: {
     color: 'white',

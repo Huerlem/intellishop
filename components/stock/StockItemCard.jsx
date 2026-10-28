@@ -429,7 +429,7 @@ const StockItemCard = ({ item, onEdit, onDelete }) => {
         marginHorizontal: 4,
       },
       primaryButton: {
-        backgroundColor: '#4B0082',
+        backgroundColor: '#4338CA',
       },
       primaryButtonText: {
         color: 'white',

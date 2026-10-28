@@ -71,18 +71,18 @@ No third-party analytics or advertising SDK is added. Events are written server-
 
 Derived: Free→Standard / Free→Premium / Standard→Premium conversion, cancellations, cost per AI generation, Premium AI consumption, revenue and cost per paying subscriber (revenue from RevenueCat; cost from the provider log). Users can opt out of non-essential metrics in Settings; App Store privacy labels must list "Purchases" and "Usage Data (product interaction)" accordingly.
 
-## 5. Decisions requiring owner approval
+## 5. Decisions (owner's provisional decisions recorded 2026-10-27)
 
-| ID | Decision | Recommendation |
-|---|---|---|
-| D1 | Prices £2.99 / £6.99 and App Store price points | Keep provisional; confirm in App Store Connect |
-| D2 | Introductory free trial *period* for Premium (Apple introductory offer) in addition to 3 AI credits? | Not at launch; revisit after data |
-| D3 | Premium fair-use limits | 100 generations/month, 10/hour |
-| D4 | Trial anti-abuse: keep an HMAC-hashed email ledger of trial use after account deletion (privacy-policy disclosure) and/or DeviceCheck | Yes to HMAC ledger; DeviceCheck optional |
-| D5 | Downgrade behaviour above Free limits | Data kept and editable; only new lists/items/pantry entries blocked |
-| D6 | Restore on a different IntelliShop account (RevenueCat transfer behaviour) | Transfer to the account performing the restore |
-| D7 | RevenueCat as subscription layer | Yes (see architecture) |
-| D8 | Premium price comparison marketing | Withhold until a licensed provider is live |
-| D9 | Annual plans | Architecture-ready; launch monthly only |
-| D10 | Can a Standard subscriber still use unused introductory AI credits? | Yes — credits are an account allowance, not a plan feature |
-| D11 | Shopping history for Free users: not recorded, or recorded but hidden until upgrade | Recorded but hidden (visible immediately after upgrading) |
+| ID | Decision | Vesper recommendation | Owner decision (provisional) |
+|---|---|---|---|
+| D1 | Prices £2.99 / £6.99 and App Store price points | Keep provisional; confirm in App Store Connect | £2.99 Standard / £6.99 Premium, pending final approval |
+| D2 | Introductory free trial *period* for Premium (Apple introductory offer) in addition to 3 AI credits? | Not at launch; revisit after data | No additional Premium free-trial period at launch |
+| D3 | Premium fair-use limits | 100 generations/month, 10/hour | 100 AI generations/month and 10/hour, subject to cost validation |
+| D4 | Trial anti-abuse: keep an HMAC-hashed email ledger of trial use after account deletion (privacy-policy disclosure) and/or DeviceCheck | Yes to HMAC ledger; DeviceCheck optional | Account-level, privacy-conscious anti-abuse controls only. **No persistent email tracking after account deletion** without a separate privacy review |
+| D5 | Downgrade behaviour above Free limits | Data kept and editable; only new lists/items/pantry entries blocked | Preserve data after downgrade |
+| D6 | Restore on a different IntelliShop account (RevenueCat transfer behaviour) | Transfer to the account performing the restore | **Secure subscription ownership validation required before any account transfer** |
+| D7 | RevenueCat as subscription layer | Yes (see architecture) | RevenueCat approved as preferred architecture, subject to integration tests |
+| D8 | Premium price comparison marketing | Withhold until a licensed provider is live | Do not advertise live supermarket prices before a licensed provider is verified |
+| D9 | Annual plans | Architecture-ready; launch monthly only | Monthly plans first |
+| D10 | Can a Standard subscriber still use unused introductory AI credits? | Yes — credits are an account allowance, not a plan feature | Standard users may consume unused one-time introductory credits; no additional credits |
+| D11 | Shopping history for Free users: not recorded, or recorded but hidden until upgrade | Recorded but hidden (visible immediately after upgrading) | Retain Free shopping history; restrict advanced history visibility |

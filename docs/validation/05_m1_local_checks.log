@@ -1,0 +1,36 @@
+$ scripts/scan-bundle-for-secrets.mjs self-test  Wed Oct 28 00:00:44 UTC 2026
+[clean bundle]
+Scanned 1 file(s) in <scratch>/scan-clean: 0 finding(s).
+EXIT_STATUS=0 (expected 0)
+[bundle with synthetic key patterns]
+FINDING: Google API key ×1 in ../../../..<scratch>/scan-dirty/_expo/index.hbc
+FINDING: Apify token ×1 in ../../../..<scratch>/scan-dirty/_expo/index.hbc
+Scanned 1 file(s) in <scratch>/scan-dirty: 2 finding(s).
+EXIT_STATUS=1 (expected 1)
+[same bundle, synthetic Google-format value declared as the public Firebase key]
+FINDING: Apify token ×1 in ../../../..<scratch>/scan-dirty/_expo/index.hbc
+Scanned 1 file(s) in <scratch>/scan-dirty: 1 finding(s).
+EXIT_STATUS=1 (expected 1: Apify pattern still reported)
+[empty directory]
+No bundle files found in <scratch>/scan-empty
+EXIT_STATUS=2 (expected 2)
+
+$ python3 replica of __tests__/security.static.test.ts and theme.tokens.test.ts assertions (Jest itself cannot run here: npm registry blocked)
+PASS - app source file count > 20 (56)
+PASS - no banned imports 
+PASS - only allow-listed EXPO_PUBLIC_ vars []
+PASS - no secret pattern AIza[0-9A-Za-z_-]{… 
+PASS - no secret pattern \bsk-(?:proj-)?[A-… 
+PASS - no secret pattern \bsk-ant-[A-Za-z0-… 
+PASS - no secret pattern apify_api_[A-Za-z0… 
+PASS - no secret pattern [0-9a-f]{10}msh[0-… 
+PASS - no secret pattern -----BEGIN [A-Z ]*… 
+PASS - no hard-coded Firebase project 
+PASS - no fabricated-data markers 
+PASS - no password/value logging []
+PASS - eas.json APP_ENV per profile, no EXPO_PUBLIC_ 
+PASS - removed V1 modules absent 
+PASS - 17 handoff colours match tokens.ts []
+PASS - 23 colour tokens (23)
+PASS - 10 Inter text styles match Figma 
+SUMMARY: 17 of 17 replica checks passed

@@ -3,7 +3,7 @@ import { AuthContext } from './AuthContext';
 import { collection, doc, getDoc, getDocs, addDoc, updateDoc, deleteDoc, query, where, orderBy, serverTimestamp } from 'firebase/firestore';
 import { db } from '@/firebase/config';
 import { handleError } from '@/errors/errorHandler';
-import { v4 as uuidv4 } from 'uuid';
+import { randomUUID } from 'expo-crypto';
 
 // create Shopping List Context
 export const ShoppingListContext = createContext();
@@ -289,7 +289,7 @@ export const ShoppingListProvider = ({ children }) => {
                     : 'others';
 
             const newItem = {
-                id: uuidv4(),
+                id: randomUUID(),
                 name: name.trim(),
                 quantity: quantity || 1,
                 unit: typeof unit === 'object' ? unit.id : unit || 'unit',
@@ -402,7 +402,7 @@ export const ShoppingListProvider = ({ children }) => {
                     : 'others';
 
             const newItem = {
-                id: uuidv4(),
+                id: randomUUID(),
                 name: name.trim(),
                 quantity: quantity || 1,
                 unit: typeof unit === 'object' ? unit.id : unit || 'unit',

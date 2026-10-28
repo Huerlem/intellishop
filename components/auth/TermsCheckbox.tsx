@@ -84,14 +84,14 @@ const styles = StyleSheet.create({
         width: 24,
         height: 24,
         borderWidth: 2,
-        borderColor: '#4B0082',
+        borderColor: '#4338CA',
         borderRadius: 4,
         marginRight: 12,
         justifyContent: 'center',
         alignItems: 'center',
     },
     checkedCheckbox: {
-        backgroundColor: '#4B0082',
+        backgroundColor: '#4338CA',
     },
     textContainer: {
         flex: 1,
@@ -106,7 +106,7 @@ const styles = StyleSheet.create({
     },
     linkText: {
         fontSize: 12,
-        color: '#4B0082',
+        color: '#4338CA',
         textDecorationLine: 'underline',
         
     },

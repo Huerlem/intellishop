@@ -59,7 +59,7 @@ const Input = ({
                     <Ionicons
                         name={iconName}
                         size={20}
-                        color={error ? '#E53E3E' : (isFocused ? '#4B0082' : '#A0AEC0')}
+                        color={error ? '#E53E3E' : (isFocused ? '#4338CA' : '#A0AEC0')}
                         style={styles.icon}
                     />
                 ) : null}
@@ -121,7 +121,7 @@ const styles = StyleSheet.create({
         height: 50,
     },
     focusedInput: {
-        borderColor: '#4B0082',
+        borderColor: '#4338CA',
         backgroundColor: '#FFFFFF',
         boxShadow: '0px 2px 4px rgba(0, 0, 0, 0.1)',
         elevation: 2,

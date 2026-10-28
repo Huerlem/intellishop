@@ -70,11 +70,11 @@ const Button = ({
 
         switch (variant) {
             case 'secondary':
-                return '#4b0082';
+                return '#4338CA';
             case 'outline':
-                return '#4B0082';
+                return '#4338CA';
             case 'ghost':
-                return '#4B0082';
+                return '#4338CA';
             case 'danger':
                 return '#FFFFFF';
             case 'success':
@@ -107,7 +107,7 @@ const Button = ({
             return (
                 <ActivityIndicator
                     size="small"
-                    color={variant === 'primary' || variant === 'danger' || variant === 'success' ? '#FFFFFF' : '#4B0082'}
+                    color={variant === 'primary' || variant === 'danger' || variant === 'success' ? '#FFFFFF' : '#4338CA'}
                 />
             );
         }
@@ -156,7 +156,7 @@ const styles = StyleSheet.create({
       justifyContent: 'center',
     },
     primaryButton: {
-      backgroundColor: '#4B0082',
+      backgroundColor: '#4338CA',
     },
     secondaryButton: {
       backgroundColor: '#FFFFFF',
@@ -166,7 +166,7 @@ const styles = StyleSheet.create({
     outlineButton: {
       backgroundColor: 'transparent',
       borderWidth: 1,
-      borderColor: '#4B0082',
+      borderColor: '#4338CA',
     },
     ghostButton: {
       backgroundColor: 'transparent',
@@ -190,32 +190,32 @@ const styles = StyleSheet.create({
       justifyContent: 'center',
     },
     primaryText: {
-      fontFamily: 'Poppins_600SemiBold',
+      fontFamily: 'Inter_600SemiBold',
       fontSize: 16,
       color: '#FFFFFF',
     },
     secondaryText: {
-      fontFamily: 'Poppins_600SemiBold',
+      fontFamily: 'Inter_600SemiBold',
       fontSize: 16,
-      color: '#4B0082',
+      color: '#4338CA',
     },
     outlineText: {
-      fontFamily: 'Poppins_600SemiBold',
+      fontFamily: 'Inter_600SemiBold',
       fontSize: 16,
-      color: '#4B0082',
+      color: '#4338CA',
     },
     ghostText: {
-      fontFamily: 'Poppins_600SemiBold',
+      fontFamily: 'Inter_600SemiBold',
       fontSize: 16,
-      color: '#4B0082',
+      color: '#4338CA',
     },
     dangerText: {
-      fontFamily: 'Poppins_600SemiBold',
+      fontFamily: 'Inter_600SemiBold',
       fontSize: 16,
       color: '#FFFFFF',
     },
     successText: {
-      fontFamily: 'Poppins_600SemiBold',
+      fontFamily: 'Inter_600SemiBold',
       fontSize: 16,
       color: '#FFFFFF',
     },

@@ -1,6 +1,5 @@
 import React, { Component } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, ScrollView } from 'react-native';
-import * as Updates from 'expo-updates';
 import { Ionicons } from '@expo/vector-icons';
 import { handleError } from '@/errors/errorHandler';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -40,18 +39,14 @@ export default class ErrorBoundary extends Component {
     }
     
 
-    //function trying to reload the app
-    handleReload = async () => {
-        try {
-            await Updates.reloadAsync();
-        } catch (error) {
-            //If does not reload, reset state to try render normally
-            this.setState({
-                hasError: false,
-                error: null,
-                errorInfo: null
-            });
-        }
+    // Clears the error so the tree renders again. (V1 called expo-updates' reloadAsync,
+    // which needs an updates configuration the app does not have.)
+    handleReload = () => {
+        this.setState({
+            hasError: false,
+            error: null,
+            errorInfo: null
+        });
     };
 
     render() {
@@ -62,7 +57,7 @@ export default class ErrorBoundary extends Component {
                     <ScrollView 
                     KeyboardShouldPersisttabs="handled"
                     contentContainerStyle={styles.content}>
-                        <Ionicons name="alert-circle-outline" size={80} color="#4B0082" />
+                        <Ionicons name="alert-circle-outline" size={80} color="#4338CA" />
 
                         <Text style={styles.title}>Ops! Something went wrong.</Text>
 
@@ -71,7 +66,7 @@ export default class ErrorBoundary extends Component {
                         </Text>
 
                         <TouchableOpacity style={styles.button} onPress={this.handleReload}>
-                            <Text style={styles.buttonText}>Reload App</Text>
+                            <Text style={styles.buttonText}>Try again</Text>
                         </TouchableOpacity>
 
                         {__DEV__ && this.state.error && (
@@ -102,15 +97,15 @@ const styles = StyleSheet.create({
         padding: 20,
     },
     title: {
-        fontFamily: 'Poppins_600SemiBold',
+        fontFamily: 'Inter_600SemiBold',
         fontSize: 24,
-        color: '#4B0082',
+        color: '#4338CA',
         marginTop: 20,
         marginBottom: 10,
         textAlign: 'center',
     },
     message: {
-        fontFamily: 'Poppins_400Regular',
+        fontFamily: 'Inter_400Regular',
         fontSize: 16,
         color: '#4A5568',
         marginBottom: 30,
@@ -118,14 +113,14 @@ const styles = StyleSheet.create({
         lineHeight: 24,
     },
     button: {
-        backgroundColor: '#4B0082',
+        backgroundColor: '#4338CA',
         paddingVertical: 12,
         paddingHorizontal: 30,
         borderRadius: 8,
         marginBottom: 40,
     },
     buttonText: {
-        fontFamily: 'Poppins_600SemiBold',
+        fontFamily: 'Inter_600SemiBold',
         fontSize: 16,
         color: '#FFFFFF',
     },
@@ -138,13 +133,13 @@ const styles = StyleSheet.create({
         borderColor: '#E2E8F0',
     },
     errorTitle: {
-        fontFamily: 'Poppins_500Medium',
+        fontFamily: 'Inter_500Medium',
         fontSize: 14,
         color: '#4A5568',
         marginBottom: 5,
     },
     errorText: {
-        fontFamily: 'Poppins_400Regular',
+        fontFamily: 'Inter_400Regular',
         fontSize: 12,
         color: '#E53E3E',
     },
@@ -168,12 +163,4 @@ const styles = StyleSheet.create({
         console.error('Error in global error handler:', handlerError);
     }
 
-    //if there is a fatal error, can try reload the app
-    if(isFatal && !__DEV__) {
-        try {
-            Updates.reloadAsync();
-        } catch (reloadError) {
-            console.error('Failed trying reload the app:', reloadError);
-        }
-    }
 };

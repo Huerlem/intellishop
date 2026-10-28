@@ -121,14 +121,14 @@ Because every request must hold a reservation, concurrent requests cannot spend 
 ### 5.4 Abuse controls
 - Email verification required before the first credit is reserved.
 - App Check enforced; per-account rate limits.
-- Optional (D4): `trialLedger/{HMAC-SHA256(normalisedEmail, TRIAL_LEDGER_PEPPER)}` kept after account deletion so a re-created account with the same email starts with 0 credits. Contains no plain email; disclosed in the privacy policy.
+- ~~Optional HMAC email ledger kept after account deletion~~ — **not adopted** (owner decision D4, 2026-10-27): no persistent email tracking after deletion without a separate privacy review. Anti-abuse relies on account-level controls: email verification, App Check, per-account rate limits and the global spend cap. Residual risk: a user who deletes and re-creates an account receives a new allowance (cost ≈ $0.005 per occurrence).
 - Optional: Apple DeviceCheck per-device bit "trial used" via a server function.
 
 ### 5.5 UI
 "2 of 3 free AI recipes remaining" on the recipe entry point and result screen; after exhaustion, a contextual Premium prompt. If the user has no pantry items and no list, the recipe entry shows an onboarding step to add ingredients (saved to Pantry) before the first generation.
 
 ## 6. Account deletion and subscriptions
-Deleting an IntelliShop account does not cancel an Apple subscription. The deletion flow must show the subscription status and a **Manage Subscription** button with a clear note before confirming. Entitlement, credits and metrics documents are deleted with the account (except the optional HMAC trial ledger, D4).
+Deleting an IntelliShop account does not cancel an Apple subscription. The deletion flow must show the subscription status and a **Manage Subscription** button with a clear note before confirming. Entitlement, credits and metrics documents are deleted with the account (D4: nothing about the user is retained for anti-abuse).
 
 ## 7. Owner actions (Apple, banking, tax)
 

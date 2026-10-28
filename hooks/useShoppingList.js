@@ -5,7 +5,7 @@ import { ShoppingListContext } from '@/context/ShoppingListContext';
 /**
  * Hook personalized to context access shopping list
  * Simplify access to states and fnction to management of shopping list
- * @return {Object} -Management shopping list state and function
+ * Management shopping list state and functions.
  */
 export const useShoppingList = () => {
     const context = useContext(ShoppingListContext);

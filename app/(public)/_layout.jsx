@@ -2,6 +2,11 @@
 import React from 'react';
 import { Stack } from 'expo-router';
 
+// Signed-out users land on the welcome screen (see src/navigation/RootStack.tsx guard).
+export const unstable_settings = {
+  initialRouteName: 'WelcomeScreen',
+};
+
 export default function PublicLayout() {
   return (
     <Stack

@@ -50,7 +50,7 @@ export default function WelcomeScreen() {
             <StatusBar style='light' />
 
             <LinearGradient
-                colors={['#4B0082', '#616E7C']}
+                colors={['#4338CA', '#616E7C']}
                 style={styles.background} />
 
             <ScrollView
@@ -74,7 +74,7 @@ export default function WelcomeScreen() {
                 <View style={styles.featureContainer}>
                     <View style={styles.featureItem}>
                         <View style={styles.featureIconContainer}>
-                            <Ionicons name="cart-outline" size={28} color="#4B0082" />
+                            <Ionicons name="cart-outline" size={28} color="#4338CA" />
                         </View>
                         <View style={styles.featureTextContainer}>
                             <Text style={styles.featureTitle}>Smart Shopping List</Text>
@@ -86,7 +86,7 @@ export default function WelcomeScreen() {
                 
                     <View style={styles.featureItem}>
                         <View style={styles.featureIconContainer}>
-                            <Ionicons name="cube-outline" size={28} color="#4B0082" />
+                            <Ionicons name="cube-outline" size={28} color="#4338CA" />
                         </View>
                         <View style={styles.featureTextContainer}>
                             <Text style={styles.featureTitle}>Inventory Management</Text>
@@ -98,7 +98,7 @@ export default function WelcomeScreen() {
 
                     <View style={styles.featureItem}>
                         <View style={styles.featureIconContainer}>
-                            <Ionicons name="bulb-outline" size={28} color="#4B0082" />
+                            <Ionicons name="bulb-outline" size={28} color="#4338CA" />
                         </View>
                         <View style={styles.featureTextContainer}>
                             <Text style={styles.featureTitle}>AI Suggestions</Text>
@@ -111,7 +111,7 @@ export default function WelcomeScreen() {
 
                     <View style={styles.featureItem}>
                         <View style={styles.featureIconContainer}>
-                        <Ionicons name="pricetag-outline" size={28} color="#4B0082" />
+                        <Ionicons name="pricetag-outline" size={28} color="#4338CA" />
                         </View>
                         <View style={styles.featureTextContainer}>
                             <Text style={styles.featureTitle}>Price Comparison</Text>
@@ -170,7 +170,7 @@ const styles = StyleSheet.create({
     },
     
     appName: {
-        fontFamily: 'Poppins_700Bold',
+        fontFamily: 'Inter_700Bold',
         fontSize: 32,
         color: '#FFFFFF',
         textShadow: '1px 1px 4px rgba(0,0,0,0.75)', // Fixed textShadow syntax
@@ -204,13 +204,13 @@ const styles = StyleSheet.create({
         flex: 1,
     },
     featureTitle: {
-        fontFamily: 'Poppins_600SemiBold',
+        fontFamily: 'Inter_600SemiBold',
         fontSize: 16,
-        color: '#4B0082',
+        color: '#4338CA',
         marginBottom: 4,
     },
     featureDescription: {
-        fontFamily: 'Poppins_400Regular',
+        fontFamily: 'Inter_400Regular',
         fontSize: 14,
         color: '#4A5568',
         lineHeight: 20,
@@ -229,9 +229,9 @@ const styles = StyleSheet.create({
         boxShadow: '0px 2px 4px rgba(0,0,0,0.1)', // Fixed boxShadow syntax
     },
     loginButtonText: {
-        fontFamily: 'Poppins_600SemiBold',
+        fontFamily: 'Inter_600SemiBold',
         fontSize: 16,
-        color: '#4B0082',
+        color: '#4338CA',
     },
     registerButton: {
         backgroundColor: 'rgba(255, 255, 255, 0.2)',
@@ -242,7 +242,7 @@ const styles = StyleSheet.create({
         alignItems: 'center',
     },
     registerButtonText: {
-        fontFamily: 'Poppins_600SemiBold',
+        fontFamily: 'Inter_600SemiBold',
         fontSize: 16,
         color: '#FFFFFF',
     },

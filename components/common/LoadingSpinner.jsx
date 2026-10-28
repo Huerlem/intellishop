@@ -9,7 +9,7 @@ const { width, height } = Dimensions.get('window');
 export default function LoadingSpinner({ 
     message = "Loading...", 
     showGrandient = false,
-    spinnerColor = "#4B0082",
+    spinnerColor = "#4338CA",
     messageColor = "#FFFFFF",
     backgroundColor = "rgba(0,0,0,0.5)"
 }) {
@@ -56,7 +56,7 @@ export default function LoadingSpinner({
             <SafeAreaView style={styles.fullScreen}>
                 <StatusBar style='light' />
                 <LinearGradient
-                    colors={['#4B0082', '#616E7C']}
+                    colors={['#4338CA', '#616E7C']}
                     style={styles.gradientBackground}
                 >
                     <SpinnerContent />
@@ -105,10 +105,10 @@ const styles = StyleSheet.create({
         borderRadius: 25,
         borderWidth: 4,
         borderColor: 'transparent',
-        borderTopColor: '#4B0082',
+        borderTopColor: '#4338CA',
     },
     message: {
-        fontFamily: 'Poppins_400Regular',
+        fontFamily: 'Inter_400Regular',
         fontSize: 16,
         textAlign: 'center',
         marginTop: 10,

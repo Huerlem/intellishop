@@ -22,7 +22,7 @@ import { handleError } from '@/errors/errorHandler';
 const Card = ({
     children, title, subtitle,
     icon, iconName, iconSize = 24,
-    iconColor = '#4B0082',
+    iconColor = '#4338CA',
     onPress, rightContent, style,
     variant = 'default',
     elevated = 'false',
@@ -146,12 +146,12 @@ const styles = StyleSheet.create({
         flex: 1,
     },
     title: {
-        fontFamily: 'Poppins_600SemiBold',
+        fontFamily: 'Inter_600SemiBold',
         fontSize: 16,
         color: '#4A5568',
     },
     subtitle: {
-        fontFamily: 'Poppins_400Regular',
+        fontFamily: 'Inter_400Regular',
         fontSize: 14,
         color: '#718096',
         marginTop: 2,

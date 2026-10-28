@@ -30,16 +30,12 @@ export default function LoginScreen () {
 
     //Manipulate the form
     const handleSubmit = async (values) => {
-        console.log('Login data:', values);
       
         try {
             const result = await login(values.email, values.password);
-            console.log('Login result:', result);
       
-          if (result.success) {
-                // Redirects to Home on successful login
-                router.replace('/(auth)/HomeScreen'); // adjust the path if necessary
-          } else {
+          // On success the auth guard (src/navigation/RootStack.tsx) switches to the signed-in area.
+          if (!result.success) {
             Alert.alert(
                 "Login Error",
                 result.error || "Please check your credentials and try again."
@@ -47,7 +43,7 @@ export default function LoginScreen () {
           }
         } catch (error) {
             Alert.alert("Login Error", "An unexpected error occurred. Please try again later.");
-            console.error("Login error:", error);
+            console.warn("Login error:", error?.code);
         }
       };
 
@@ -215,13 +211,13 @@ const styles = StyleSheet.create({
         marginBottom: 24,
     },
     title: {
-        fontFamily: 'Poppins_600SemiBold',
+        fontFamily: 'Inter_600SemiBold',
         fontSize: 24,
-        color: '#4B0082',
+        color: '#4338CA',
         marginBottom: 8,
     },
     subtitle: {
-        fontFamily: 'Poppins_400Regular',
+        fontFamily: 'Inter_400Regular',
         fontSize: 16,
         color: '#718096',
         textAlign: 'center',
@@ -237,9 +233,9 @@ const styles = StyleSheet.create({
         marginBottom: 16,
     },
     forgotPasswordText: {
-        fontFamily: 'Poppins_500Medium',
+        fontFamily: 'Inter_500Medium',
         fontSize: 14,
-        color: '#4B0082',
+        color: '#4338CA',
     },
     loginButton: {
         width: '100%',
@@ -254,15 +250,15 @@ const styles = StyleSheet.create({
         marginTop: 'auto',
     },
     footerText: {
-        fontFamily: 'Poppins_400Regular',
+        fontFamily: 'Inter_400Regular',
         fontSize: 14,
         color: '#718096',
         marginRight: 4,
     },
     registerText: {
-        fontFamily: 'Poppins_600SemiBold',
+        fontFamily: 'Inter_600SemiBold',
         fontSize: 14,
-        color: '#4B0082',
+        color: '#4338CA',
     },
 });
 

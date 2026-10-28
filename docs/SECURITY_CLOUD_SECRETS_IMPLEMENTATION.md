@@ -19,7 +19,7 @@ Nothing in this document is complete until the tests in §7 run and their logs a
 
 ## 2. Key distinctions applied
 
-- **Firebase client configuration is not a private key.** `apiKey`, `appId`, `projectId` etc. identify the project; they are shipped in the app by design. Protection comes from Security Rules, App Check and **API-key restrictions** (iOS bundle ID + Firebase APIs only). It is still kept out of source and supplied per environment, so dev/staging/prod cannot be mixed up.
+- **Firebase client configuration is not a private key.** `apiKey`, `appId`, `projectId` etc. identify the project; they are shipped in the app by design. Protection comes from Security Rules, App Check and **API-key API restrictions** (Firebase APIs only; never the Gemini API). Firebase documents these keys as public by design ([Firebase](https://firebase.google.com/docs/projects/api-keys)). iOS application restrictions are not used because the Firebase JS SDK does not send the iOS bundle header. It is still kept out of source and supplied per environment, so dev/staging/prod cannot be mixed up.
 - **EAS environment variables do not protect anything compiled into the app.** Any `EXPO_PUBLIC_*` value, and any value read by app code at build time, ends up readable in the shipped bundle. EAS secret-visibility variables are used only for **build-time** credentials (none currently needed). Private provider keys never go to EAS.
 - **Private provider keys exist in exactly one place:** Google Cloud Secret Manager of the matching Firebase project, read by the Cloud Function bound to it.
 
@@ -93,7 +93,7 @@ IAM (least privilege):
 - **Function runtime identity:** dedicated service account per codebase (e.g. `fn-ai@…`), with `roles/datastore.user` and `roles/secretmanager.secretAccessor` granted **on the specific secrets** only — not project-wide Editor.
 - **Deploy identity:** CI deploys with Workload Identity Federation (GitHub OIDC), no JSON keys; roles limited to Functions developer, Service Account User on the runtime SA, Firebase Rules admin, Secret Manager viewer (not accessor).
 - **People:** owner keeps Owner. No standing access for collaborators; Secret Manager *accessor* is never granted to humans in staging/prod.
-- **API keys:** Firebase iOS key restricted to the iOS bundle ID and the Firebase/Identity Toolkit/App Check APIs. Generative Language API disabled in Firebase projects unless intentionally used via a server key.
+- **API keys:** the Firebase key used by the app has API restrictions limited to the Firebase APIs it needs (Identity Toolkit, Token Service, Cloud Firestore, Cloud Storage for Firebase, Firebase Installations, Firebase App Check). No iOS-app restriction (the JS SDK does not send the bundle header). The Generative Language API is never in its allowlist and is disabled in Firebase projects; a server-only AI key, if ever needed, is a separate key in Secret Manager.
 
 Abuse controls (shared with AI architecture): Auth required, App Check enforced (App Attest), entitlement check, race-safe credit reservation for Free, per-user rate limit, Premium fair-use quota, global daily spend cap, request size limits, provider timeout, typed errors without internals.
 

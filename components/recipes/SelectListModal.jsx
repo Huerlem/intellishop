@@ -59,7 +59,7 @@ const SelectListModal = ({
         onPress={() => onSelectList(item)}
       >
         <View style={styles.listIcon}>
-          <Ionicons name="list-outline" size={24} color="#4B0082" />
+          <Ionicons name="list-outline" size={24} color="#4338CA" />
         </View>
         <View style={styles.listInfo}>
           <Text style={styles.listName}>{item.name}</Text>
@@ -89,7 +89,7 @@ const SelectListModal = ({
               onPress={() => setShowCreateForm(true)}
             >
               <View style={styles.createNewIcon}>
-                <Ionicons name="add-circle" size={24} color="#4B0082" />
+                <Ionicons name="add-circle" size={24} color="#4338CA" />
               </View>
               <Text style={styles.createNewText}>Create New List</Text>
             </TouchableOpacity>
@@ -167,7 +167,7 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     marginBottom: 16,
     borderWidth: 2,
-    borderColor: '#4B0082',
+    borderColor: '#4338CA',
     borderStyle: 'dashed',
   },
   createNewIcon: {
@@ -176,7 +176,7 @@ const styles = StyleSheet.create({
   createNewText: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#4B0082',
+    color: '#4338CA',
   },
   divider: {
     flexDirection: 'row',
@@ -275,7 +275,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#6B7280',
   },
   createButton: {
-    backgroundColor: '#4B0082',
+    backgroundColor: '#4338CA',
   },
 });
 

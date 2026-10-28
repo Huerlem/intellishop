@@ -8,13 +8,13 @@ import { updateProfile } from 'firebase/auth';
 import { doc, updateDoc, serverTimestamp } from 'firebase/firestore';
 import { storage, auth, db } from './config';
 import { handleError } from '@/errors/errorHandler';
-import { v4 as uuidv4 } from 'uuid';
+import { randomUUID } from 'expo-crypto';
 
 export const uploadFile = async (file, path = 'images', progressCallback = null) => {
   try {
     // Generate unique filename
     const fileExtension = file.name ? file.name.split('.').pop() : 'jpg';
-    const fileName = `${uuidv4()}.${fileExtension}`;
+    const fileName = `${randomUUID()}.${fileExtension}`;
     const fullPath = `${path}/${fileName}`;
     
     // Create storage reference
@@ -77,7 +77,7 @@ export const uploadUserProfileImage = async (file, progressCallback = null) => {
 
     // Generate unique filename for profile image
     const fileExtension = file.name ? file.name.split('.').pop() : 'jpg';
-    const fileName = `profile_${user.uid}_${uuidv4()}.${fileExtension}`;
+    const fileName = `profile_${user.uid}_${randomUUID()}.${fileExtension}`;
     const fullPath = `profile_images/${user.uid}/${fileName}`;
     
     // Create storage reference

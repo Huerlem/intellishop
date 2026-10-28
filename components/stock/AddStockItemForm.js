@@ -405,8 +405,8 @@ const styles = StyleSheet.create({
     borderColor: '#E2E8F0',
   },
   optionActive: {
-    backgroundColor: '#4B0082',
-    borderColor: '#4B0082',
+    backgroundColor: '#4338CA',
+    borderColor: '#4338CA',
   },
   optionText: {
     fontSize: 14,
@@ -433,8 +433,8 @@ const styles = StyleSheet.create({
     borderColor: '#E2E8F0',
   },
   unitOptionActive: {
-    backgroundColor: '#4B0082',
-    borderColor: '#4B0082',
+    backgroundColor: '#4338CA',
+    borderColor: '#4338CA',
   },
   unitOptionText: {
     fontSize: 12,

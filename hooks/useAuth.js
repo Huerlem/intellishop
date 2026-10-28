@@ -4,7 +4,7 @@ import { AuthContext } from '@/context/AuthContext';
 /**
  * Hook personalized to access Auth context
  * Simplify auth state and function access
- * @return {Object} - Authentication State and function
+ * @returns {import('@/context/AuthContext.types').UseAuthResult}
  */
 export const useAuth = () => {
     const context = useContext(AuthContext);
@@ -14,7 +14,7 @@ export const useAuth = () => {
     }
 
     //Destructures context values ​​to make them easier to use
-    const { user, userData, loading, error, setError, register, login, logout,
+    const { user, userData, initialising, loading, error, setError, clearError, register, login, logout,
         forgotPassword, updateProfile, isAuthenticated
     } = context;
 
@@ -58,9 +58,11 @@ export const useAuth = () => {
     return {
         user,
         userData,
+        initialising,
         loading,
         error,
         setError,
+        clearError,
         register,
         login,
         logout,

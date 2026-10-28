@@ -1,15 +1,5 @@
-// metro.config.js
-const { getDefaultConfig } = require('@expo/metro-config');
-const path = require('path');
+// Default Expo Metro configuration (SDK 58). V1 customisations (extra extensions and
+// node_modules paths) were redundant with the defaults and have been removed.
+const { getDefaultConfig } = require('expo/metro-config');
 
-const config = getDefaultConfig(__dirname);
-
-config.resolver.sourceExts.push('cjs', 'mjs');
-config.resolver.assetExts.push('db', 'txt', 'png', 'jpg');
-
-config.resolver.nodeModulesPaths = [
-  path.resolve(__dirname, 'node_modules'),
-  ...config.resolver.nodeModulesPaths,
-];
-
-module.exports = config;
+module.exports = getDefaultConfig(__dirname);

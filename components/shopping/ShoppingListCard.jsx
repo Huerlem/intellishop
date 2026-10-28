@@ -90,13 +90,17 @@ const ShoppingListCard = ({
             </View>
             
             <View style={styles.actions}>
-                <Pressable 
-                    style={[styles.actionButton, styles.compareButton]}
-                    onPress={() => onComparePrice && onComparePrice(list)}
-                    testID={`compare-prices-${listId}`}
-                >
-                    <Ionicons name="pricetag-outline" size={20} color="#FFF" />
-                </Pressable>
+                {onComparePrice ? (
+                    <Pressable
+                        style={[styles.actionButton, styles.compareButton]}
+                        onPress={() => onComparePrice(list)}
+                        testID={`compare-prices-${listId}`}
+                        accessibilityRole="button"
+                        accessibilityLabel="Compare prices"
+                    >
+                        <Ionicons name="pricetag-outline" size={20} color="#FFF" />
+                    </Pressable>
+                ) : null}
                 
                 <Pressable 
                     style={[styles.actionButton, styles.stockButton]}
@@ -106,13 +110,27 @@ const ShoppingListCard = ({
                     <Ionicons name="cube-outline" size={20} color="#FFF" />
                 </Pressable>
                 
-                <Pressable 
-                    style={[styles.actionButton, styles.shareButton]}
-                    onPress={() => onShare && onShare(list)}
-                    testID={`share-list-${listId}`}
-                >
-                    <Ionicons name="share-outline" size={20} color="#FFF" />
-                </Pressable>
+                {onShare ? (
+                
+                    <Pressable
+                
+                        style={[styles.actionButton, styles.shareButton]}
+                
+                        onPress={() => onShare(list)}
+                
+                        testID={`share-list-${listId}`}
+                
+                        accessibilityRole="button"
+                
+                        accessibilityLabel="Share list"
+                
+                    >
+                
+                        <Ionicons name="share-outline" size={20} color="#FFF" />
+                
+                    </Pressable>
+                
+                ) : null}
                 
                 <Pressable 
                     style={[styles.actionButton, styles.editButton]}
@@ -156,7 +174,7 @@ const styles = StyleSheet.create({
     title: {
         fontSize: 18,
         fontWeight: '600',
-        color: '#4B0082',
+        color: '#4338CA',
         flex: 1,
     },
     badge: {
@@ -183,7 +201,7 @@ const styles = StyleSheet.create({
     },
     progressBar: {
         height: '100%',
-        backgroundColor: '#4B0082',
+        backgroundColor: '#4338CA',
         borderRadius: 3,
     },
     progressText: {
@@ -203,7 +221,7 @@ const styles = StyleSheet.create({
     price: {
         fontSize: 14,
         fontWeight: '600',
-        color: '#4B0082',
+        color: '#4338CA',
     },
     actions: {
         flexDirection: 'row',

@@ -49,8 +49,8 @@ entitlementsUpdatedAt:  timestamp
 | E10 | Billing retry → recovered | Apple charges successfully | previous paid plan | unchanged | unchanged | — |
 | E11 | Paid → refunded | Apple refund | free; status `refunded` | unchanged | unchanged | Immediate removal of paid access |
 | E12 | Restore on same account | Restore Purchases | per verified Apple state | unchanged | **no** grant | Idempotent |
-| E13 | Restore on a different IntelliShop account | Restore Purchases | per D6 (transfer to restoring account) | unchanged on both accounts | **no** grant on either | Old account becomes free |
-| E14 | Account deleted | User deletes account | — | deleted (export offered first) | deleted (HMAC trial ledger kept if D4 approved) | Apple subscription must be cancelled by the user; warned in the deletion flow |
+| E13 | Restore on a different IntelliShop account | Restore Purchases | Transfer only after secure ownership validation (D6): the restoring account must present a valid App Store transaction for the same Apple ID, verified server-side; otherwise the restore is refused with guidance | unchanged on both accounts | **no** grant on either | If transferred, the old account becomes free. Exact RevenueCat transfer setting to be chosen and tested in M6 |
+| E14 | Account deleted | User deletes account | — | deleted (export offered first) | deleted (no retention, D4) | Apple subscription must be cancelled by the user; warned in the deletion flow |
 | E15 | Client claims premium (tampered state) | — | unchanged (server state) | — | — | Server never reads plan from the client |
 
 ## 4. Precedence rules

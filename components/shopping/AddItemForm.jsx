@@ -248,7 +248,7 @@ const styles = StyleSheet.create({
         marginBottom: 8,
     },
     categoryOptionActive: {
-        backgroundColor: '#4B0082',
+        backgroundColor: '#4338CA',
     },
     categoryOptionText: {
         fontSize: 14,

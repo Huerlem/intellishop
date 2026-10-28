@@ -23,7 +23,6 @@ import Button from '@/components/ui/Button';
 import LoadingSpinner from '@/components/common/LoadingSpinner';
 import PasswordStrengthIndicator from '@/components/auth/PasswordStrengthIndicator';
 import TermsCheckbox from '@/components/auth/TermsCheckbox';
-import SocialLoginButtons from '@/components/auth/SocialLoginButtons';
 
 export default function RegisterScreen() {
   const router = useRouter();
@@ -148,7 +147,6 @@ export default function RegisterScreen() {
       const userData = {
         displayName: formData.displayName,
         email: formData.email,
-        password: formData.password,
         phoneNumber: formData.phoneNumber,
         street: formData.street,
         city: formData.city,
@@ -163,9 +161,9 @@ export default function RegisterScreen() {
         setError(result.error);
       }
       
-      // Se o registro for bem-sucedido, o redirecionamento será feito pelo useEffect no app/index.js
+      // On success the auth guard (src/navigation/RootStack.tsx) switches to the signed-in area.
     } catch (error) {
-      console.error('Error registering:', error);
+      console.warn('Error registering:', error?.code);
       setError('An error occurred while trying to register. Please try again.');
     } finally {
       setLoading(false);
@@ -318,10 +316,6 @@ export default function RegisterScreen() {
               onPress={goToNextStep}
               style={styles.submitButton}
             />
-            <SocialLoginButtons
-              onGooglePress={() => console.log('Google')}
-              onApplePress={() => console.log('Apple')}
-            />
           </View>
         )}
         
@@ -449,13 +443,13 @@ const styles = StyleSheet.create({
     marginHorizontal: 4,
   },
   progressDotActive: {
-    backgroundColor: '#4B0082',
+    backgroundColor: '#4338CA',
     width: 12,
     height: 12,
     borderRadius: 6,
   },
   progressDotCompleted: {
-    backgroundColor: '#4B0082',
+    backgroundColor: '#4338CA',
   },
   placeholder: {
     width: 40,
@@ -471,7 +465,7 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 28,
     fontWeight: 'bold',
-    color: '#4B0082',
+    color: '#4338CA',
     marginBottom: 8,
   },
   subtitle: {
@@ -543,7 +537,7 @@ const styles = StyleSheet.create({
     lineHeight: 20,
   },
   termsLink: {
-    color: '#4B0082',
+    color: '#4338CA',
     textDecorationLine: 'underline',
   },
   submitButton: {
@@ -569,6 +563,6 @@ const styles = StyleSheet.create({
   footerLink: {
     fontSize: 14,
     fontWeight: 'bold',
-    color: '#4B0082',
+    color: '#4338CA',
   },
 });

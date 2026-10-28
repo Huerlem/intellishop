@@ -220,7 +220,7 @@ const styles = StyleSheet.create({
   title: {
       fontSize: 18,
       fontWeight: '600',
-      color: '#4B0082',
+      color: '#4338CA',
   },
   closeButton: {
       padding: 4,
@@ -235,7 +235,7 @@ const styles = StyleSheet.create({
       borderTopColor: '#E2E8F0',
   },
   submitButton: {
-      backgroundColor: '#4B0082',
+      backgroundColor: '#4338CA',
       borderRadius: 8,
       paddingVertical: 12,
       alignItems: 'center',

@@ -1,7 +1,7 @@
 import React, { useState, useRef } from 'react';
 import { View, Text, StyleSheet, Platform, Pressable } from 'react-native';
 import { Icon } from '@/utils/WebCompatibleIcons';
-import { Swipeable } from 'react-native-gesture-handler';
+import ReanimatedSwipeable from 'react-native-gesture-handler/ReanimatedSwipeable';
 import { CATEGORIES_ICONS, UNITS } from '@/constants/stockConstants';
 
 const ShoppingListItem = ({
@@ -25,9 +25,15 @@ const ShoppingListItem = ({
 
     const ActionButtons = () => (
         <View style={styles.inlineActions}>
-            <Pressable style={[styles.actionButton, styles.compareButton]} onPress={() => onComparePrice?.(item)}>
-                <Icon name="pricetag-outline" size={18} color="#FFF" />
-            </Pressable>
+            {onComparePrice ? (
+                <Pressable
+                    style={[styles.actionButton, styles.compareButton]}
+                    onPress={() => onComparePrice(item)}
+                    accessibilityRole="button"
+                    accessibilityLabel="Compare prices">
+                    <Icon name="pricetag-outline" size={18} color="#FFF" />
+                </Pressable>
+            ) : null}
             <Pressable
                 style={[styles.actionButton, styles.stockButton]}
                 onPress={() => onAddToStock?.(item)}
@@ -82,7 +88,7 @@ const ShoppingListItem = ({
                 <Icon
                     name={item.checked ? "checkmark-circle" : "ellipse-outline"}
                     size={24}
-                    color={item.checked ? "#4B0082" : "#A0AEC0"}
+                    color={item.checked ? "#4338CA" : "#A0AEC0"}
                 />
             </Pressable>
 
@@ -123,14 +129,14 @@ const ShoppingListItem = ({
     }
 
     return (
-        <Swipeable
+        <ReanimatedSwipeable
             ref={swipeableRef}
             renderRightActions={() => <ActionButtons />}
             onSwipeableOpen={() => setIsOpen(true)}
             onSwipeableClose={() => setIsOpen(false)}
             enabled={!disabled}>
             <ItemContent />
-        </Swipeable>
+        </ReanimatedSwipeable>
     );
 };
 
@@ -176,7 +182,7 @@ const styles = StyleSheet.create({
     stockBadge: {
         flexDirection: 'row',
         alignItems: 'center',
-        backgroundColor: '#4B0082',
+        backgroundColor: '#4338CA',
         borderRadius: 4,
         paddingHorizontal: 6,
         paddingVertical: 2,
@@ -199,7 +205,7 @@ const styles = StyleSheet.create({
     },
     price: {
         fontSize: 14,
-        color: '#4B0082',
+        color: '#4338CA',
         marginRight: 12,
     },
     category: {

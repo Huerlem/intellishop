@@ -1,4 +1,4 @@
-import React, { createContext, useState, useEffect, useContext } from 'react';
+import React, { createContext, useState, useEffect, useContext, useCallback } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import {
     registerUser,
@@ -7,74 +7,52 @@ import {
     resetPassword,
     getUserData,
     updateUserProfile,
-    useAuthState
+    subscribeToAuthState,
 } from '@/firebase/authHelpers';
 import { handleError } from '@/errors/errorHandler';
 
-export const AuthContext = createContext();
+/** @type {import('react').Context<import('./AuthContext.types').AuthContextValue | undefined>} */
+export const AuthContext = createContext(undefined);
+
+// V1 stored the user's UID under this key. It was never a token and is no longer used.
+const LEGACY_UID_KEY = 'userToken';
 
 export const AuthProvider = ({ children }) => {
     const [user, setUser] = useState(null);
     const [userData, setUserData] = useState(null);
-    const [loading, setLoading] = useState(true);
+    // `initialising` is true only until Firebase reports the first auth state.
+    // Navigation guards wait for it; it is not affected by later login/logout calls.
+    const [initialising, setInitialising] = useState(true);
+    // `loading` reflects an auth operation in progress (login, register, logout, ...).
+    const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
 
-    const clearError = () => setError(null);
+    const clearError = useCallback(() => setError(null), []);
 
     useEffect(() => {
-        const checkSession = async () => {
-            try {
-                const unsubscribe = useAuthState(async (firebaseUser) => {
-                    setLoading(true);
-                    
-                    if (firebaseUser) {
-                        setUser(firebaseUser);
-                        
-                        try {
-                            const userDataResult = await getUserData(firebaseUser.uid);
-                            if (userDataResult.success) {
-                                setUserData(userDataResult.userData);
-                            } else {
-                                handleError(userDataResult.error, {
-                                    title: 'User Data Retrieval Failed'
-                                });
-                            }
-                            
-                            await AsyncStorage.setItem('userToken', firebaseUser.uid);
-                        } catch (dataError) {
-                            handleError(dataError, {
-                                title: 'Error Fetching User Data'
-                            });
-                        }
+        AsyncStorage.removeItem(LEGACY_UID_KEY).catch(() => {});
+
+        const unsubscribe = subscribeToAuthState(async (firebaseUser) => {
+            if (firebaseUser) {
+                setUser(firebaseUser);
+                try {
+                    const result = await getUserData(firebaseUser.uid);
+                    if (result.success) {
+                        setUserData(result.userData);
                     } else {
-                        setUser(null);
-                        setUserData(null);
-                        await AsyncStorage.removeItem('userToken');
+                        handleError(result.error, { title: 'User Data Retrieval Failed', silent: true });
                     }
-                    
-                    setLoading(false);
-                });
-
-                return () => {
-                    if (typeof unsubscribe === 'function') {
-                        unsubscribe();
-                    }
-                };
-            } catch (err) {
-                handleError(err, {
-                    title: 'Session Check Error'
-                });
-                setLoading(false);
+                } catch (dataError) {
+                    handleError(dataError, { title: 'Error Fetching User Data', silent: true });
+                }
+            } else {
+                setUser(null);
+                setUserData(null);
             }
-        };
+            setInitialising(false);
+        });
 
-        const cleanup = checkSession();
-
-        return () => {
-            if (typeof cleanup === 'function') {
-                cleanup();
-            }
-        };
+        return unsubscribe;
     }, []);
 
     const login = async (email, password) => {
@@ -85,16 +63,13 @@ export const AuthProvider = ({ children }) => {
             if (result.success) {
                 setUser(result.user);
                 return { success: true, user: result.user };
-            } else {
-                setError(result.error);
-                return { success: false, error: result.error, code: result.code };
             }
-        } catch (error) {
-            const handledError = handleError(error, { 
-                title: 'Login Failed' 
-            });
-            setError(handledError.message);
-            return { success: false, error: handledError.message, code: handledError.code };
+            setError(result.error);
+            return { success: false, error: result.error, code: result.code };
+        } catch (err) {
+            const handled = handleError(err, { title: 'Login Failed' });
+            setError(handled.message);
+            return { success: false, error: handled.message, code: handled.code };
         } finally {
             setLoading(false);
         }
@@ -109,16 +84,13 @@ export const AuthProvider = ({ children }) => {
                 setUser(result.user);
                 setUserData(additionalData);
                 return { success: true, user: result.user };
-            } else {
-                setError(result.error);
-                return { success: false, error: result.error, code: result.code };
             }
-        } catch (error) {
-            const handledError = handleError(error, { 
-                title: 'Registration Failed' 
-            });
-            setError(handledError.message);
-            return { success: false, error: handledError.message, code: handledError.code };
+            setError(result.error);
+            return { success: false, error: result.error, code: result.code };
+        } catch (err) {
+            const handled = handleError(err, { title: 'Registration Failed' });
+            setError(handled.message);
+            return { success: false, error: handled.message, code: handled.code };
         } finally {
             setLoading(false);
         }
@@ -132,15 +104,13 @@ export const AuthProvider = ({ children }) => {
             if (result.success) {
                 setUser(null);
                 setUserData(null);
-                await AsyncStorage.removeItem('userToken');
                 return { success: true };
-            } else {
-                const handled = handleError(error, { title: 'Logout Failed' });
-                setError(handled.message);
-                return { success: false, error: handled.message };
             }
-        } catch (error) {
-            const handled = handleError(error, { title: 'Logout Failed' });
+            const handled = handleError(new Error(result.error || 'Logout failed'), { title: 'Logout Failed' });
+            setError(handled.message);
+            return { success: false, error: handled.message };
+        } catch (err) {
+            const handled = handleError(err, { title: 'Logout Failed' });
             setError(handled.message);
             return { success: false, error: handled.message, code: handled.code };
         } finally {
@@ -152,10 +122,9 @@ export const AuthProvider = ({ children }) => {
         setLoading(true);
         setError(null);
         try {
-            const result = await resetPassword(email);
-            return result;
-        } catch (error) {
-            const handled = handleError(error, { title: 'Password Reset Failed' });
+            return await resetPassword(email);
+        } catch (err) {
+            const handled = handleError(err, { title: 'Password Reset Failed' });
             setError(handled.message);
             return { success: false, error: handled.message, code: handled.code };
         } finally {
@@ -173,13 +142,12 @@ export const AuthProvider = ({ children }) => {
             if (result.success) {
                 setUserData((prev) => ({ ...prev, ...newData }));
                 return { success: true };
-            } else {
-                const handled = handleError(result.error, { title: 'Update Failed' });
-                setError(handled.message);
-                return { success: false, error: handled.message, code: handled.code };
             }
-        } catch (error) {
-            const handled = handleError(result.error, { title: 'Update Failed' });
+            const handled = handleError(new Error(result.error || 'Update failed'), { title: 'Update Failed' });
+            setError(handled.message);
+            return { success: false, error: handled.message, code: handled.code };
+        } catch (err) {
+            const handled = handleError(err, { title: 'Update Failed' });
             setError(handled.message);
             return { success: false, error: handled.message, code: handled.code };
         } finally {
@@ -192,6 +160,7 @@ export const AuthProvider = ({ children }) => {
             value={{
                 user,
                 userData,
+                initialising,
                 loading,
                 error,
                 setError,
@@ -209,12 +178,11 @@ export const AuthProvider = ({ children }) => {
     );
 };
 
-export const useAuth = () => {
+/** @returns {import('./AuthContext.types').AuthContextValue} */
+export const useAuthContext = () => {
     const context = useContext(AuthContext);
     if (context === undefined) {
-        throw new Error('useAuth must be used within an AuthProvider');
+        throw new Error('useAuthContext must be used within an AuthProvider');
     }
     return context;
 };
-
-export default useAuth;

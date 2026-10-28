@@ -74,7 +74,7 @@ export default function ForgotPassword() {
             style={styles.backButton}
             onPress={handleGoToLogin}
           >
-            <Ionicons name="arrow-back" size={24} color="#4B0082" />
+            <Ionicons name="arrow-back" size={24} color="#4338CA" />
           </TouchableOpacity>
 
           {/* 🏠 Logo que volta para WelcomeScreen */}
@@ -95,7 +95,7 @@ export default function ForgotPassword() {
 
             {resetSent ? (
               <View style={styles.successContainer}>
-                <Ionicons name="mail-open-outline" size={64} color="#4B0082" style={styles.emailIcon} />
+                <Ionicons name="mail-open-outline" size={64} color="#4338CA" style={styles.emailIcon} />
                 <Text style={styles.successTitle}>Email sent!</Text>
                 <Text style={styles.successText}>
                   Please check your inbox and follow the instructions to recover your password.
@@ -164,9 +164,9 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   appName: {
-    fontFamily: 'Poppins_700Bold',
+    fontFamily: 'Inter_700Bold',
     fontSize: 26,
-    color: '#4B0082',
+    color: '#4338CA',
   },
   formContainer: {
     maxWidth: 400,
@@ -176,7 +176,7 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 22,
     fontWeight: 'bold',
-    color: '#4B0082',
+    color: '#4338CA',
     textAlign: 'center',
     marginBottom: 8,
   },
@@ -212,7 +212,7 @@ const styles = StyleSheet.create({
   successTitle: {
     fontSize: 22,
     fontWeight: 'bold',
-    color: '#4B0082',
+    color: '#4338CA',
     marginBottom: 8,
   },
   successText: {

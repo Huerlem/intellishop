@@ -5,6 +5,7 @@
  */
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { act, render, screen } from '@testing-library/react-native';
+import { useEffect } from 'react';
 import { Text } from 'react-native';
 
 import { AuthProvider } from '@/context/AuthContext';
@@ -32,16 +33,20 @@ jest.mock('@/firebase/authHelpers', () => ({
   resetPassword: jest.fn(),
 }));
 
-let latest: ReturnType<typeof useAuth> | null = null;
+// Latest context value, captured after each commit (never written during render).
+const latest: { current: ReturnType<typeof useAuth> | null } = { current: null };
 
 function Probe() {
-  latest = useAuth();
-  return <Text testID="state">{latest.initialising ? 'initialising' : latest.isAuthenticated ? 'in' : 'out'}</Text>;
+  const auth = useAuth();
+  useEffect(() => {
+    latest.current = auth;
+  });
+  return <Text testID="state">{auth.initialising ? 'initialising' : auth.isAuthenticated ? 'in' : 'out'}</Text>;
 }
 
 beforeEach(() => {
   mockUnsubscribe.mockClear();
-  latest = null;
+  latest.current = null;
 });
 
 it('stays initialising until Firebase reports the first auth state', async () => {
@@ -85,7 +90,7 @@ it('reports a profile update failure instead of throwing', async () => {
 
   let result: { success: boolean } | undefined;
   await act(async () => {
-    result = await latest!.updateProfile({ displayName: 'New Name' });
+    result = await latest.current!.updateProfile({ displayName: 'New Name' });
   });
   expect(result?.success).toBe(false);
 });

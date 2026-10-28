@@ -2,6 +2,10 @@ import { initializeApp, getApps, getApp } from 'firebase/app';
 import { getFirestore, connectFirestoreEmulator } from 'firebase/firestore';
 import { getStorage, connectStorageEmulator } from 'firebase/storage';
 import { getFunctions, connectFunctionsEmulator } from 'firebase/functions';
+// `getReactNativePersistence` exists only in @firebase/auth's React Native build, which Metro selects
+// through the package's "react-native" field; the public typings that ESLint's resolver reads do
+// not declare it. Runtime import verified by the iOS bundle export in CI.
+// eslint-disable-next-line import/named
 import { getAuth, initializeAuth, getReactNativePersistence, connectAuthEmulator } from 'firebase/auth';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Constants from 'expo-constants';

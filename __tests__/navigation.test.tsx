@@ -10,30 +10,68 @@
 import { act, fireEvent, screen } from '@testing-library/react-native';
 import { router, Stack } from 'expo-router';
 import { renderRouter } from 'expo-router/testing-library';
-import { useState, type Dispatch, type SetStateAction } from 'react';
+import { useSyncExternalStore } from 'react';
 import { Text } from 'react-native';
 
 import * as PublicLayoutModule from '@/app/(public)/_layout';
 import { RootStack } from '@/src/navigation/RootStack';
 import { TabsLayout } from '@/src/navigation/TabsLayout';
 
+function AppStackStub() {
+  return <Stack screenOptions={{ headerShown: false }} />;
+}
+function stubScreen(testID: string, label: string) {
+  function StubScreen() {
+    return <Text testID={testID}>{label}</Text>;
+  }
+  StubScreen.displayName = `Stub(${testID})`;
+  return StubScreen;
+}
+
 const appRoutes = {
-  '(app)/_layout': () => <Stack screenOptions={{ headerShown: false }} />,
+  '(app)/_layout': AppStackStub,
   '(app)/(tabs)/_layout': TabsLayout,
-  '(app)/(tabs)/index': () => <Text testID="home-screen">Home screen</Text>,
-  '(app)/(tabs)/lists': () => <Text testID="lists-screen">Lists screen</Text>,
-  '(app)/(tabs)/pantry': () => <Text testID="pantry-screen">Pantry screen</Text>,
-  '(app)/profile': () => <Text testID="profile-screen">Profile screen</Text>,
+  '(app)/(tabs)/index': stubScreen('home-screen', 'Home screen'),
+  '(app)/(tabs)/lists': stubScreen('lists-screen', 'Lists screen'),
+  '(app)/(tabs)/pantry': stubScreen('pantry-screen', 'Pantry screen'),
+  '(app)/profile': stubScreen('profile-screen', 'Profile screen'),
   '(public)/_layout': PublicLayoutModule,
-  '(public)/WelcomeScreen': () => <Text testID="welcome-screen">Welcome</Text>,
-  '(public)/LoginScreen': () => <Text testID="login-screen">Login</Text>,
-  '(public)/RegisterScreen': () => <Text testID="register-screen">Register</Text>,
-  '(public)/forgot-password': () => <Text testID="forgot-screen">Forgot password</Text>,
+  '(public)/WelcomeScreen': stubScreen('welcome-screen', 'Welcome'),
+  '(public)/LoginScreen': stubScreen('login-screen', 'Login'),
+  '(public)/RegisterScreen': stubScreen('register-screen', 'Register'),
+  '(public)/forgot-password': stubScreen('forgot-screen', 'Forgot password'),
 };
+
+function SignedOutRoot() {
+  return <RootStack isAuthenticated={false} />;
+}
+function SignedInRoot() {
+  return <RootStack isAuthenticated />;
+}
+
+/** Minimal external store so a test can sign the user out without mutating state during render. */
+const session = {
+  signedIn: true,
+  listeners: new Set<() => void>(),
+  subscribe(listener: () => void) {
+    session.listeners.add(listener);
+    return () => void session.listeners.delete(listener);
+  },
+  get: () => session.signedIn,
+  set(value: boolean) {
+    session.signedIn = value;
+    session.listeners.forEach((l) => l());
+  },
+};
+
+function SessionRoot() {
+  const signedIn = useSyncExternalStore(session.subscribe, session.get);
+  return <RootStack isAuthenticated={signedIn} />;
+}
 
 describe('signed-out user', () => {
   it('lands on Welcome and cannot open the signed-in area', async () => {
-    await renderRouter({ _layout: () => <RootStack isAuthenticated={false} />, ...appRoutes }, { initialUrl: '/' });
+    await renderRouter({ _layout: SignedOutRoot, ...appRoutes }, { initialUrl: '/' });
 
     expect(screen.getByTestId('welcome-screen')).toBeVisible();
     expect(screen.queryByTestId('home-screen')).toBeNull();
@@ -45,7 +83,7 @@ describe('signed-out user', () => {
 
 describe('signed-in user', () => {
   it('sees exactly the Home, Lists and Pantry tabs', async () => {
-    await renderRouter({ _layout: () => <RootStack isAuthenticated />, ...appRoutes }, { initialUrl: '/' });
+    await renderRouter({ _layout: SignedInRoot, ...appRoutes }, { initialUrl: '/' });
 
     expect(screen.getByTestId('home-screen')).toBeVisible();
 
@@ -56,7 +94,7 @@ describe('signed-in user', () => {
   });
 
   it('switches tabs from the bottom navigation', async () => {
-    await renderRouter({ _layout: () => <RootStack isAuthenticated />, ...appRoutes }, { initialUrl: '/' });
+    await renderRouter({ _layout: SignedInRoot, ...appRoutes }, { initialUrl: '/' });
 
     await fireEvent.press(screen.getByLabelText('Pantry, tab, 3 of 3'));
     expect(screen.getByTestId('pantry-screen')).toBeVisible();
@@ -68,7 +106,7 @@ describe('signed-in user', () => {
   });
 
   it('opens Profile contextually without adding a tab', async () => {
-    await renderRouter({ _layout: () => <RootStack isAuthenticated />, ...appRoutes }, { initialUrl: '/' });
+    await renderRouter({ _layout: SignedInRoot, ...appRoutes }, { initialUrl: '/' });
 
     await act(() => router.push('/profile'));
     expect(screen.getByTestId('profile-screen')).toBeVisible();
@@ -76,23 +114,13 @@ describe('signed-in user', () => {
   });
 
   it('returns to the public area after signing out', async () => {
-    let auth: [boolean, Dispatch<SetStateAction<boolean>>];
-
-    await renderRouter(
-      {
-        _layout: function Layout() {
-          auth = useState(true);
-          return <RootStack isAuthenticated={auth[0]} />;
-        },
-        ...appRoutes,
-      },
-      { initialUrl: '/' }
-    );
+    session.set(true);
+    await renderRouter({ _layout: SessionRoot, ...appRoutes }, { initialUrl: '/' });
 
     expect(screen.getByTestId('home-screen')).toBeVisible();
 
     await act(() => {
-      auth[1](false);
+      session.set(false);
     });
 
     expect(screen.getByTestId('welcome-screen')).toBeVisible();

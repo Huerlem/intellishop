@@ -1,0 +1,20 @@
+# Offline production audit (GitHub Advisory Database head Wed Oct 28 19:56:48 2026 +0000, 37302 reviewed advisories)
+# Tool: scripts/audit/offline-npm-audit.cjs. Approximation of npm audit --omit=dev; NOT the CI gate.
+
+## A. package-lock.json at 9404c9e (as published)
+HIGH      @grpc/grpc-js@1.9.16 fixed:1.13.6 GHSA-m9gg-hp2v-232j CVE-2026-101916 — @grpc/grpc-js: In certain configurations, getAuthContext can return unauthorized certificates as though they were authorized
+          at node_modules/@grpc/grpc-js
+HIGH      zod@3.25.76 fixed:4.6.6 GHSA-mrhx-c7xc-m3w5 CVE-2023-54404 — Zod can exhaust memory while validating oversized constrained collections
+          at node_modules/expo/node_modules/zod
+LOW       @grpc/grpc-js@1.9.16 fixed:1.13.6 GHSA-f596-whhp-79r4 CVE-2026-101915 — @grpc/grpc-js: The server transmits some error messages thrown by method handlers to the client in status messages
+          at node_modules/@grpc/grpc-js
+LOW       deepmerge@4.3.1 fixed:none GHSA-gcqx-w48m-w2h4 CVE-2026-93753 — deepmerge mergeObject() allows prototype poisoning of returned objects
+          at node_modules/deepmerge
+
+4 findings; 2 high/critical
+
+## B. Simulated after remediation (grpc-js 1.14.6, @expo/cli zod 4.6.7, removed deps formik/yup/expo-image-picker/expo-linear-gradient/expo-crypto/@expo/vector-icons). Real lockfile is produced by the Generate lockfile workflow.
+LOW       deepmerge@4.3.1 fixed:none GHSA-gcqx-w48m-w2h4 CVE-2026-93753 — deepmerge mergeObject() allows prototype poisoning of returned objects
+          at node_modules/deepmerge
+
+1 findings; 0 high/critical

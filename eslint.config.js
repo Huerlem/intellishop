@@ -49,7 +49,9 @@ const LEGACY_JS_FILES = [
 ];
 
 module.exports = defineConfig([
-  globalIgnores(['dist/*', 'docs/*', 'node_modules/*', '.expo/*', 'ios/*', 'android/*']),
+  // functions/ is a separate npm package (own node_modules); it is linted in the CI "firebase" job
+  // with eslint.functions.config.js after `npm ci --prefix functions`. legal-site/dist is generated.
+  globalIgnores(['dist/*', 'docs/*', 'node_modules/*', '.expo/*', 'ios/*', 'android/*', 'functions/**', 'legal-site/dist/**']),
   expoConfig,
   {
     // Node.js scripts and configuration files.

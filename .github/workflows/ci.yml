@@ -207,6 +207,11 @@ jobs:
         if: ${{ !cancelled() && steps.install.outcome == 'success' }}
         run: npm --prefix functions run build 2>&1 | tee ci-logs/23-functions-build.log
 
+      - name: Lint Cloud Functions
+        id: functions_lint
+        if: ${{ !cancelled() && steps.install.outcome == 'success' }}
+        run: npx eslint -c eslint.functions.config.js functions/src 2>&1 | tee ci-logs/23b-functions-lint.log
+
       - name: Security Rules tests (Firestore + Storage emulators)
         id: rules
         if: ${{ !cancelled() && steps.install.outcome == 'success' }}
@@ -235,6 +240,7 @@ jobs:
             echo "| Lockfiles present | ${{ steps.lockfiles.outcome }} |"
             echo "| npm ci (app + functions) | ${{ steps.install.outcome }} |"
             echo "| Functions build | ${{ steps.functions_build.outcome }} |"
+            echo "| Functions lint | ${{ steps.functions_lint.outcome }} |"
             echo "| Security Rules tests | ${{ steps.rules.outcome }} |"
             echo "| Functions npm audit gate | ${{ steps.functions_audit.outcome }} |"
           } >> "$GITHUB_STEP_SUMMARY"

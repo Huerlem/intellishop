@@ -1,0 +1,36 @@
+# TypeScript Version 6.0.2 on the current source with SDK 53 typings (proxy). Old = tsconfig.json at 9404c9e; New = with types [jest, node].
+## Old tsconfig — error count and top codes
+912
+    549 TS2304: Cannot find name 'expect'.
+    187 TS2593: Cannot find name 'it'. Do you need to install type definitions for a test runner? 
+     62 TS2593: Cannot find name 'describe'. Do you need to install type definitions for a test ru
+     51 TS2304: Cannot find name 'jest'.
+      7 TS7006: Parameter 'req' implicitly has an 'any' type.
+      5 TS2593: Cannot find name 'beforeEach'. Do you need to install type definitions for a test 
+      4 TS2307: Cannot find module '@testing-library/react-native' or its corresponding type decla
+      4 TS2304: Cannot find name '__dirname'.
+      2 TS7006: Parameter 'name' implicitly has an 'any' type.
+      2 TS7006: Parameter 'f' implicitly has an 'any' type.
+      2 TS2591: Cannot find name 'path'. Do you need to install type definitions for node? Try `np
+      2 TS2591: Cannot find name 'node:path'. Do you need to install type definitions for node? Tr
+## New tsconfig — all errors (only packages missing from the SDK 53 archive: RNTL 14 types/matchers, @expo-google-fonts/inter, @firebase/rules-unit-testing)
+__tests__/auth.context.test.tsx(7,37): error TS2307: Cannot find module '@testing-library/react-native' or its corresponding type declarations.
+__tests__/auth.context.test.tsx(58,39): error TS2339: Property 'toHaveTextContent' does not exist on type 'JestMatchers<any>'.
+__tests__/auth.context.test.tsx(63,39): error TS2339: Property 'toHaveTextContent' does not exist on type 'JestMatchers<any>'.
+__tests__/auth.context.test.tsx(68,39): error TS2339: Property 'toHaveTextContent' does not exist on type 'JestMatchers<any>'.
+__tests__/navigation.test.tsx(10,40): error TS2307: Cannot find module '@testing-library/react-native' or its corresponding type declarations.
+__tests__/navigation.test.tsx(76,50): error TS2339: Property 'toBeVisible' does not exist on type 'JestMatchers<any>'.
+__tests__/navigation.test.tsx(88,47): error TS2339: Property 'toBeVisible' does not exist on type 'JestMatchers<any>'.
+__tests__/navigation.test.tsx(100,49): error TS2339: Property 'toBeVisible' does not exist on type 'JestMatchers<any>'.
+__tests__/navigation.test.tsx(101,20): error TS2339: Property 'toHavePathname' does not exist on type 'JestMatchers<any>'.
+__tests__/navigation.test.tsx(104,48): error TS2339: Property 'toBeVisible' does not exist on type 'JestMatchers<any>'.
+__tests__/navigation.test.tsx(105,20): error TS2339: Property 'toHavePathname' does not exist on type 'JestMatchers<any>'.
+__tests__/navigation.test.tsx(112,50): error TS2339: Property 'toBeVisible' does not exist on type 'JestMatchers<any>'.
+__tests__/navigation.test.tsx(120,47): error TS2339: Property 'toBeVisible' does not exist on type 'JestMatchers<any>'.
+__tests__/navigation.test.tsx(126,50): error TS2339: Property 'toBeVisible' does not exist on type 'JestMatchers<any>'.
+__tests__/ui/components.test.tsx(4,43): error TS2307: Cannot find module '@testing-library/react-native' or its corresponding type declarations.
+__tests__/ui/screens.test.tsx(6,57): error TS2307: Cannot find module '@testing-library/react-native' or its corresponding type declarations.
+app/_layout.tsx(7,8): error TS2307: Cannot find module '@expo-google-fonts/inter' or its corresponding type declarations.
+rules-tests/firestore.rules.test.ts(10,99): error TS2307: Cannot find module '@firebase/rules-unit-testing' or its corresponding type declarations.
+rules-tests/firestore.rules.test.ts(34,46): error TS7006: Parameter 'ctx' implicitly has an 'any' type.
+rules-tests/storage.rules.test.ts(4,99): error TS2307: Cannot find module '@firebase/rules-unit-testing' or its corresponding type declarations.

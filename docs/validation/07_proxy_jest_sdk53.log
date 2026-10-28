@@ -1,0 +1,64 @@
+$ jest --ci --verbose __tests__/theme.tokens.test.ts __tests__/security.static.test.ts   (commit b9f39d5)
+# PROXY CHECK with archived SDK 53 toolchain (jest 29.7.0, jest-expo 53.0.5).
+Wed Oct 28 07:59:25 UTC 2026
+PASS __tests__/security.static.test.ts
+  app source
+    ✓ is non-empty (sanity check for the scanner) (2 ms)
+    ✓ does not import AI provider SDKs or axios (2 ms)
+    ✓ only uses allow-listed EXPO_PUBLIC_ variables (2 ms)
+    ✓ contains no Google API key (1 ms)
+    ✓ contains no OpenAI-style key (2 ms)
+    ✓ contains no Anthropic key (2 ms)
+    ✓ contains no Apify token (1 ms)
+    ✓ contains no RapidAPI key (3 ms)
+    ✓ contains no Private key block (6 ms)
+    ✓ contains no hard-coded Firebase project configuration (2 ms)
+    ✓ contains no V1 fabricated-data markers (2 ms)
+    ✓ does not log passwords or form values on sign-in (1 ms)
+  build configuration
+    ✓ eas.json defines APP_ENV for every profile and no EXPO_PUBLIC_ values (1 ms)
+    ✓ removed V1 client-side AI, price and mock modules stay removed
+
+PASS __tests__/theme.tokens.test.ts
+  colour tokens
+    ✓ action/primary matches the approved handoff value
+    ✓ action/pressed matches the approved handoff value (1 ms)
+    ✓ action/subtle matches the approved handoff value
+    ✓ intelligence/base matches the approved handoff value
+    ✓ intelligence/subtle matches the approved handoff value
+    ✓ brand/accent matches the approved handoff value
+    ✓ brand/subtle matches the approved handoff value
+    ✓ content/primary matches the approved handoff value
+    ✓ content/secondary matches the approved handoff value
+    ✓ content/muted matches the approved handoff value
+    ✓ border/default matches the approved handoff value
+    ✓ surface/canvas matches the approved handoff value
+    ✓ surface/card matches the approved handoff value
+    ✓ status/success matches the approved handoff value
+    ✓ status/warning matches the approved handoff value
+    ✓ status/error matches the approved handoff value (1 ms)
+    ✓ status/information matches the approved handoff value
+    ✓ covers every colour in the handoff file
+    ✓ includes the six Figma colour tokens missing from the handoff file
+    ✓ defines exactly 23 colour tokens, as in Figma
+  number tokens
+    ✓ match Figma (18 values)
+  typography
+    ✓ defines the 10 approved Inter text styles (3 ms)
+    ✓ display is Inter_700Bold 32/40 (1 ms)
+    ✓ h1 is Inter_700Bold 28/34
+    ✓ h2 is Inter_700Bold 22/28 (1 ms)
+    ✓ h3 is Inter_600SemiBold 18/24
+    ✓ body is Inter_400Regular 16/24
+    ✓ bodySmall is Inter_400Regular 14/20
+    ✓ label is Inter_600SemiBold 14/20
+    ✓ caption is Inter_500Medium 12/16 (1 ms)
+    ✓ button is Inter_600SemiBold 15/20
+    ✓ dataLarge is Inter_700Bold 24/30
+
+Test Suites: 2 passed, 2 total
+Tests:       46 passed, 46 total
+Snapshots:   0 total
+Time:        0.438 s, estimated 2 s
+Ran all test suites matching /__tests__\/theme.tokens.test.ts|__tests__\/security.static.test.ts/i.
+EXIT_STATUS=0

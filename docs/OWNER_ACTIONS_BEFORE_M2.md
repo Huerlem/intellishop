@@ -2,20 +2,65 @@
 
 Date: 2026-10-28. Never paste credential values into chat, commits, issues or documents. Where a step creates a new credential, keep it in the provider console or Secret Manager only.
 
-## A. Run CI on the branch (required for M1 PASS)
+## A. Publish the branch and run CI (required for M1 PASS)
 
-1. **Publish the branch** (from your local clone of `Huerlem/intellishop`, on Windows PowerShell or Git Bash):
-   ```
-   git fetch <path>\intellishop-feature-v2.bundle feature/v2-production-rebuild:feature/v2-production-rebuild
-   git push origin feature/v2-production-rebuild
-   ```
-   This creates only the development branch; `main` is unchanged.
-2. **Allow the workflows to run**: GitHub → repository → **Settings → Actions → General** → *Actions permissions*: allow GitHub actions and the actions used here (`actions/checkout`, `actions/setup-node`, `actions/upload-artifact`, `gitleaks/gitleaks-action`), or "Allow all actions".
-3. The push starts **CI** and **Secret scan**. The first CI run is a *bootstrap* run because the old SDK 53 lockfile was removed:
-   - open the run → **Artifacts** → download `package-lock` → put `package-lock.json` at the repository root → commit and push it (`git add package-lock.json && git commit -m "chore: lockfile for Expo SDK 58" && git push`). Every later run uses `npm ci`.
-   - alternatively, if Node 22 is installed on your PC: `npm install` in the project folder, then commit the generated `package-lock.json`.
-4. **Send me the evidence**: the run URL(s) and the `ci-logs` artifact zip from the run on the commit that contains the lockfile. I will fix any failure and send a new bundle; M1 is reported PASS only when all blocking steps succeed.
-5. Optional but recommended: **Settings → Code security** → enable *Secret scanning* and *Push protection*.
+Requirements: Git for Windows (includes Git Credential Manager for GitHub sign-in). Node.js is **not** needed — the lockfile is generated on GitHub.
+
+Your local `intellishop-new` folder has a different Git history (branch `master`, no remote). Do **not** use it for this; clone the bundle into a new folder instead.
+
+### A1. Verify and clone the bundle (PowerShell)
+```powershell
+# Folder where you saved intellishop-feature-v2.bundle
+cd $HOME\Downloads
+
+# 1) Verify the bundle (must end with "The bundle records a complete history.")
+git bundle verify .\intellishop-feature-v2.bundle
+
+# 2) Show the branches inside it
+git bundle list-heads .\intellishop-feature-v2.bundle
+
+# 3) Clone the development branch into a NEW folder
+git clone --branch feature/v2-production-rebuild .\intellishop-feature-v2.bundle C:\dev\intellishop-v2
+cd C:\dev\intellishop-v2
+
+# 4) Check the history: the first line is the latest commit; e7b52ea (M1) and 0e26321 (V1) must appear
+git log --oneline -12
+git merge-base --is-ancestor e7b52ea HEAD; if ($LASTEXITCODE -eq 0) { "e7b52ea is in this branch" } else { "MISSING e7b52ea - stop" }
+```
+
+### A2. Push only the development branch (PowerShell)
+```powershell
+# The clone's "origin" points at the bundle file; point it at GitHub instead
+git remote set-url origin https://github.com/Huerlem/intellishop.git
+
+# Before pushing: GitHub main must still be the V1 commit 0e2632144190c0fea8d12e29952bb98095fe174c
+git ls-remote origin refs/heads/main
+
+# Push ONLY the development branch (main is not touched; no force)
+git push -u origin feature/v2-production-rebuild
+
+# After pushing: main must be unchanged
+git ls-remote origin refs/heads/main refs/heads/feature/v2-production-rebuild
+```
+A browser window may open to sign in to GitHub (Git Credential Manager).
+
+Optional — also keep the unverified snapshot on GitHub (its CI run will fail at the lockfile step, which is expected; the branch is otherwise preserved inside the bundle file):
+```powershell
+git push origin refs/remotes/origin/wip/unverified-uncommitted-snapshot:refs/heads/wip/unverified-uncommitted-snapshot
+```
+
+### A3. Generate the lockfile and run CI (GitHub website)
+1. Repository → **Actions**. If GitHub asks, click **"I understand my workflows, go ahead and enable them"**.
+2. The push already started **CI** (it will fail at *Require package-lock.json* — expected on this first push) and **Secret scan** (should pass).
+3. Actions → **Generate lockfile** → **Run workflow** → Branch: `feature/v2-production-rebuild` → **Run workflow**. It installs from registry.npmjs.org, checks every package source, commits `package-lock.json` to the branch and then starts **CI** and **Secret scan** on that commit.
+4. If *Generate lockfile* fails with a permissions error at the commit step: Settings → **Actions → General → Workflow permissions** → *Read and write permissions* → Save, then run it again.
+
+### A4. Send me the evidence
+- The URLs of: the *Generate lockfile* run, and the **CI** and **Secret scan** runs on the lockfile commit.
+- Artifacts from those runs: `ci-logs` (CI), `lockfile-and-logs` (Generate lockfile), `gitleaks-report` (Secret scan).
+I will review every step, fix failures on the branch, and send a new bundle (or you can give this session push access). M1 is reported PASS only when all blocking CI steps succeed on a commit that contains the lockfile.
+
+Optional: Settings → **Code security** → enable *Secret scanning* and *Push protection*.
 
 ## B. Revoke or rotate the exposed credentials (S1) — do this now
 
@@ -29,6 +74,8 @@ These keys are public in commit `0e26321` of the public repository. Revoking the
 | C4 | Apify API token | [Apify Console](https://console.apify.com) → **Settings → API & Integrations** → revoke/delete the exposed token ([docs](https://docs.apify.com/account/settings.md)). Check **Actors → Runs** and **Billing** for activity you did not start. | Not reused: provider dropped (scraping). |
 | C5 | Spoonacular API key | Spoonacular **food-api console → Profile** → regenerate the API key. *(Exact button label not verified against the current console; if no regenerate option is shown, contact Spoonacular support to deactivate the key.)* | Not used in the app any more. |
 | C6 | USDA FoodData Central key (api.data.gov) | Request a new key on the FoodData Central API key signup page and ask api.data.gov support to deactivate the old one. *(Self-service revocation not verified.)* | Not used in the app any more; low risk (free, rate-limited). |
+
+**Your local project:** `intellishop-new\.env` holds the same five values and is also committed in that folder's local Git history (commit `31db6b7`). After revoking, delete `.env` and do not push that local repository anywhere.
 
 Also check: any build you distributed (Expo Go share, internal or TestFlight) used these keys from `eas.json`; nothing further is needed once they are revoked.
 
@@ -48,7 +95,8 @@ When done, reply with "C1–C6 revoked/rotated" (no values). I will mark S1 comp
 1. **Apple Developer Program** membership (O1). Without it there is no way to install a development build on your iPhone from Windows.
 2. **Expo account** for EAS Build; then `npx eas-cli login` and `npx eas-cli init` in the project (links the EAS project; no secrets in Git).
 3. EAS cloud builds replace the need for a Mac.
+4. **Confirm the EAS project**: `app.config.ts` now links EAS project `ad1df46f-81bc-491f-b80f-5a7c81e0eae2` with slug `intellishop` (taken from your local `app.config.js`). Check it at expo.dev → your account → Projects. If you prefer a fresh EAS project, tell me before the first EAS build.
 
-## E. Decide on the unexplained snapshot branch
+## E. Unexplained snapshot branch
 
-Local branch `wip/unverified-uncommitted-snapshot` (in the bundle) holds 79 uncommitted changes found in the workspace at 2026-10-27 23:45 that I cannot attribute to any recorded action. They were not used for M1. Choose: **discard** (recommended — M1 re-implemented the same scope with verification) or **review**.
+`wip/unverified-uncommitted-snapshot` is preserved in the bundle and analysed in `WIP_SNAPSHOT_ANALYSIS.md`: recommendation **do not merge**; its one valuable change has been adopted; keep it for reference until the M4 component rebuild, then delete (your approval needed).

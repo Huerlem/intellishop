@@ -1,0 +1,23 @@
+$ jest --config <proxy config> __tests__/*.crud.test.tsx __tests__/auth.context.test.tsx   (commit b9f39d5)
+# PROXY CHECK with archived SDK 53 toolchain; @testing-library/react-native absent from the archive, replaced by a ~50-line local shim (renderHook/act/waitFor/render/screen.getByTestId/toHaveTextContent). CI runs the real library.
+Wed Oct 28 07:59:26 UTC 2026
+PASS __tests__/auth.context.test.tsx
+  ✓ stays initialising until Firebase reports the first auth state (79 ms)
+  ✓ unsubscribes from auth state changes on unmount (3 ms)
+  ✓ reports a profile update failure instead of throwing (7 ms)
+  ✓ removes data V1 left on the device (UID under "userToken" and persisted error messages) (2 ms)
+
+PASS __tests__/shoppingList.crud.test.tsx
+  ✓ creates a list, adds, edits, completes and removes items, renames and deletes it — persisting every step (13 ms)
+  ✓ loads only the signed-in user's lists and converts timestamps (2 ms)
+  ✓ does not load or keep lists when signed out (1 ms)
+
+PASS __tests__/pantry.crud.test.tsx
+  ✓ adds, updates and removes pantry items, persisting each step (5 ms)
+  ✓ loads only the signed-in user's items and flags items expiring within 7 days (8 ms)
+
+Test Suites: 3 passed, 3 total
+Tests:       9 passed, 9 total
+Snapshots:   0 total
+Time:        1.343 s
+EXIT_STATUS=0

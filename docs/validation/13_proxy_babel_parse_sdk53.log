@@ -1,0 +1,4 @@
+$ node .proxy/babel-parse-all.js   (commit b9f39d5, Wed Oct 28 07:59:28 UTC 2026)
+# PROXY CHECK: every source file compiled with @babel/core + babel-preset-expo from the owner's archived SDK 53 node_modules.
+compiled 69 files, 0 failed
+EXIT_STATUS=0

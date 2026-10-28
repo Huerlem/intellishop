@@ -1,0 +1,32 @@
+# gitleaks 8.30.1 (release binary, sha256 verified), --redact (no secret values printed). Branch head b9f39d5 + uncommitted docs.
+Wed Oct 28 08:01:46 UTC 2026
+
+$ gitleaks git --redact --log-opts="--all" --config .gitleaks.toml --ignore-path <none> .   [A: full history, all branches, WITHOUT .gitleaksignore]
+EXIT_STATUS=1
+  findings: 7
+   5x expo-public-private-credential   eas.json                                 commit 0e26321
+   1x gcp-api-key                      eas.json                                 commit 0e26321
+   1x gcp-api-key                      firebase/config.js                       commit 0e26321
+
+$ gitleaks git --redact --log-opts="--all" --config .gitleaks.toml .   [A': same, WITH .gitleaksignore — what CI runs]
+EXIT_STATUS=0
+  findings: 0
+
+$ gitleaks git --redact --log-opts="0e26321..feature/v2-production-rebuild" --config .gitleaks.toml .   [B: every commit after the leaking commit]
+EXIT_STATUS=0
+  findings: 0
+
+$ gitleaks dir --redact --config .gitleaks.toml .   [C: working tree]
+EXIT_STATUS=0
+  findings: 0
+
+$ gitleaks git --redact --log-opts="--all" <owner's local V1 repository>   [D: default rules]
+EXIT_STATUS=1
+  findings: 7
+   1x gcp-api-key                      .env                                     commit 31db6b7
+   1x gcp-api-key                      eas.json                                 commit aae7325
+   1x gcp-api-key                      firebase/config.js                       commit 31db6b7
+   2x generic-api-key                  .env                                     commit 31db6b7
+   2x generic-api-key                  eas.json                                 commit aae7325
+
+# Negative control (2026-10-28 07:53): a commit adding a synthetic Google-format key to a throwaway clone with .gitleaksignore present → 'leaks found: 1', EXIT_STATUS=1 (expected).

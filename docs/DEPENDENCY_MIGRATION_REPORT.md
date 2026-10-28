@@ -137,7 +137,7 @@ Totals: 68 packages in V1 → 39 in M1 (37 removed, 8 added, 27 updated, 4 uncha
 |---|---|---|---|
 | `tsc --noEmit -p tsconfig.json` (TS 5.8.3, RN 0.79, expo-router 5) | 2 | 17 diagnostics, **all** caused by packages absent from the archive (`@testing-library/react-native`, `@expo-google-fonts/inter`) and their matchers; 0 others | `06_proxy_tsc_sdk53.log` |
 | `jest` tokens + static security tests (jest 29.7, jest-expo 53) | 0 | 46/46 passed | `07_proxy_jest_sdk53.log` |
-| `jest` CRUD + auth regression tests with a local Testing Library shim | 0 | 8/8 passed | `08_proxy_jest_crud_sdk53.log` |
+| `jest` CRUD + auth regression tests with a local Testing Library shim | 0 | 9/9 passed (4 auth, 3 lists, 2 pantry) | `08_proxy_jest_crud_sdk53.log` |
 | Mutation check: V1 auth-listener bug reintroduced | 1 (expected) | regression test fails as intended | `09_mutation_check_auth_listener.log` |
 | Babel (`babel-preset-expo` 53) compile of every source file | 0 | 69 files, 0 failures | `13_proxy_babel_parse_sdk53.log` |
 

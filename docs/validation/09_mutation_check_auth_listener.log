@@ -1,0 +1,4 @@
+# MUTATION CHECK: V1 listener-leak bug reintroduced temporarily in a throwaway worktree; the regression test must FAIL.
+  ● unsubscribes from auth state changes on unmount
+Tests:       1 failed, 2 skipped, 3 total
+EXIT_STATUS=1 (expected 1)

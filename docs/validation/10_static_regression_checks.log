@@ -1,0 +1,58 @@
+$ python3 -I scripts/audit/<check>.py .   (commit b9f39d5)
+Wed Oct 28 07:59:31 UTC 2026
+== check_imports
+files=66 import specifiers=314 distinct packages=21
+packages imported: @expo-google-fonts/inter, @expo/vector-icons, @react-native-async-storage/async-storage, @testing-library/react-native, eslint, eslint-config-expo, expo, expo-crypto, expo-image-picker, expo-linear-gradient, expo-router, expo-splash-screen, expo-status-bar, firebase, formik, globals, react, react-native, react-native-gesture-handler, react-native-safe-area-context, yup
+declared but never imported: @babel/core, @expo/metro-runtime, @react-native/jest-preset, @types/jest, @types/react, babel-plugin-module-resolver, expo-constants, expo-dev-client, expo-font, expo-linking, jest, jest-expo, react-dom, react-native-reanimated, react-native-screens, react-native-worklets, test-renderer, typescript
+PROBLEMS: none
+EXIT_STATUS=0
+== check_named_imports
+named imports checked: 107; missing: 0
+EXIT_STATUS=0
+== check_contracts
+AuthContext: 13 keys
+ShoppingListContext: 19 keys
+StockContext: 14 keys
+useAuth: 18 keys
+useShoppingList: 26 keys
+useStock: 11 keys
+ok      src/screens/HomeScreen.jsx <- AuthContext: userData
+ok      src/screens/HomeScreen.jsx <- ShoppingListContext: currentList, fetchShoppingLists, loading
+ok      src/screens/HomeScreen.jsx <- StockContext: lowStockItems, fetchStockItems, loading, removeStockItem
+ok      src/screens/HomeScreen.jsx <- useAuth: logout
+ok      src/screens/HomeScreen.jsx <- ShoppingListContext: removeItem, toggleItemChecked, updateItem
+ok      src/screens/HomeScreen.jsx <- StockContext: addListItemsToStock
+ok      src/screens/ListsScreen.jsx <- useShoppingList: lists, currentList, items, loading, fetchShoppingLists, selectList, createShoppingList, updateList, deleteList, addItem, updateItem, toggleItemChecked, removeItem, clearCompleted, sortItems, totalItems, completedItems
+ok      src/screens/ListsScreen.jsx <- StockContext: addListItemsToStock
+ok      src/screens/PantryScreen.jsx <- StockContext: stockItems, loading, addStockItem, updateStockItem, removeStockItem, getLowStockItems, getExpiringItems, sortStockItems
+ok      src/screens/ProfileScreen.jsx <- useAuth: user, userData, updateProfile, error
+ok      app/(public)/LoginScreen.jsx <- useAuth: login, loading
+ok      app/(public)/RegisterScreen.jsx <- useAuth: register, error
+ok      app/(public)/forgot-password.jsx <- useAuth: forgotPassword, error, loading, setError
+ok      app/_layout.tsx <- useAuth: initialising, isAuthenticated
+ok      hooks/useStock.js <- AuthContext: user
+TOTAL MISSING: 0
+EXIT_STATUS=0
+== check_routes
+ok     app/(public)/RegisterScreen.jsx '/(public)/LoginScreen' -> /(public)/LoginScreen
+ok     app/(public)/LoginScreen.jsx '/(public)/RegisterScreen' -> /(public)/RegisterScreen
+ok     app/(public)/LoginScreen.jsx '/(public)/forgot-password' -> /(public)/forgot-password
+ok     app/(public)/LoginScreen.jsx '/(public)/WelcomeScreen' -> /(public)/WelcomeScreen
+ok     app/(public)/WelcomeScreen.jsx '/(public)/LoginScreen' -> /(public)/LoginScreen
+ok     app/(public)/WelcomeScreen.jsx '/(public)/RegisterScreen' -> /(public)/RegisterScreen
+ok     app/(public)/WelcomeScreen.jsx '/(public)/WelcomeScreen' -> /(public)/WelcomeScreen
+ok     app/(public)/forgot-password.jsx '/(public)/LoginScreen' -> /(public)/LoginScreen
+ok     app/(public)/forgot-password.jsx '/(public)/WelcomeScreen' -> /(public)/WelcomeScreen
+ok     src/screens/HomeScreen.jsx ROUTES.lists -> /lists
+ok     src/screens/HomeScreen.jsx ROUTES.lists -> /lists
+ok     src/screens/HomeScreen.jsx ROUTES.lists -> /lists
+ok     src/screens/HomeScreen.jsx ROUTES.pantry -> /pantry
+ok     src/screens/HomeScreen.jsx ROUTES.pantry -> /pantry
+ok     src/screens/HomeScreen.jsx ROUTES.lists -> /lists
+ok     src/screens/HomeScreen.jsx ROUTES.pantry -> /pantry
+ok     src/screens/HomeScreen.jsx ROUTES.profile -> /profile
+ok     src/screens/PantryScreen.jsx ROUTES.home -> /
+ok     src/screens/ListsScreen.jsx ROUTES.home -> /
+routes: ['/', '/(app)/(tabs)', '/(app)/(tabs)/lists', '/(app)/(tabs)/pantry', '/(app)/profile', '/(public)/LoginScreen', '/(public)/RegisterScreen', '/(public)/WelcomeScreen', '/(public)/forgot-password', '/LoginScreen', '/RegisterScreen', '/WelcomeScreen', '/forgot-password', '/lists', '/pantry', '/profile']
+BROKEN TOTAL: 0
+EXIT_STATUS=0

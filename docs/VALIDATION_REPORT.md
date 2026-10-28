@@ -50,3 +50,20 @@ The npm registry is still blocked in this environment (`npm view yup version` vi
 | `node --check` on JS configs; JSON/YAML parse | PASS |
 
 Expo SDK 58 versions were read from `github.com/expo/expo` branch `sdk-58` (`packages/expo/bundledNativeModules.json`) because the npm registry is unreachable; resolved versions will come from the CI-generated lockfile.
+
+## M1 technical review update (2026-10-28)
+
+Registry still blocked (`npm view expo@58 version` → E403, 07:39 UTC). New evidence produced in this environment; logs in `docs/validation/`:
+
+| Log | Check | Exit | Result |
+|---|---|---|---|
+| `06_proxy_tsc_sdk53.log` | `tsc --noEmit` with the owner's archived SDK 53 `node_modules` | 2 | 17 diagnostics, all from packages absent in the archive; 0 others |
+| `07_proxy_jest_sdk53.log` | Jest: tokens + static security | 0 | 46/46 |
+| `08_proxy_jest_crud_sdk53.log` | Jest: auth regression + list/pantry CRUD (local Testing Library shim) | 0 | 9/9 |
+| `09_mutation_check_auth_listener.log` | V1 listener bug reintroduced | 1 (expected) | test detects it |
+| `10_static_regression_checks.log` | imports / named imports / context contracts / routes | 0 ×4 | 317 imports, 106 named imports, 0 missing fields, 19/19 routes |
+| `11_gitleaks.log` | gitleaks 8.30.1 (verified binary): full history, new commits, tree, owner's local repo | 1 / 0 / 0 / 1 | historical findings only in `0e26321` (and the owner's local `.env`) |
+| `12_actionlint.log` | actionlint 1.7.12 + shellcheck 0.11.0 | 0 | no findings |
+| `13_proxy_babel_parse_sdk53.log` | Babel compile of every source file | 0 | 69/69 |
+
+All "proxy" results come from the SDK 53 toolchain in the owner's archive and are not M1 acceptance evidence; they reduce the risk of the first SDK 58 CI run failing.

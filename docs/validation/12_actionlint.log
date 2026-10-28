@@ -1,0 +1,3 @@
+$ actionlint -shellcheck <shellcheck 0.11.0> .github/workflows/*.yml
+Wed Oct 28 08:01:50 UTC 2026
+EXIT_STATUS=0

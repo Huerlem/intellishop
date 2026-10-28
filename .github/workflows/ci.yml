@@ -40,7 +40,7 @@ jobs:
         run: |
           mkdir -p ci-logs
           if [ ! -f package-lock.json ]; then
-            echo "::error::package-lock.json is missing. Run the 'Generate lockfile' workflow on this branch (Actions → Generate lockfile → Run workflow); it commits the lockfile and starts CI again."
+            echo "::error::package-lock.json is missing. The 'Generate lockfile' workflow runs on every push to feature/** (or Actions → Generate lockfile → Run workflow); it commits the lockfile and starts CI again."
             exit 1
           fi
 

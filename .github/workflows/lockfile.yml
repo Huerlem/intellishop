@@ -1,15 +1,18 @@
 name: Generate lockfile
 
-# Resolves the dependency graphs of the app (./) and of Cloud Functions (functions/) from the
-# official npm registry, commits package-lock.json files to the branch, then starts the CI and
+# Keeps package-lock.json (app) and functions/package-lock.json in sync with package.json, using
+# only the official npm registry, commits the result to the branch, then starts the CI and
 # secret-scan workflows on that commit (CI always uses `npm ci`). Refuses to run on `main`.
 #
+# `npm install --package-lock-only` creates a missing lockfile, or updates an existing one with the
+# smallest change that matches package.json (existing resolutions are kept). Nothing is committed
+# when the lockfiles are already in sync.
+#
 # Triggers:
-# - automatically on a push to a feature/** branch when a lockfile is MISSING (GitHub only lists
-#   workflow_dispatch workflows in the Actions UI once they exist on the default branch, so the
-#   first lockfile cannot rely on the "Run workflow" button);
+# - automatically on every push to a feature/** branch (GitHub only offers "Run workflow" for
+#   workflows that exist on the default branch, so the first run cannot rely on that button);
 # - manually (Actions → "Generate lockfile" → Run workflow, or `gh workflow run lockfile.yml
-#   --ref <branch>`), with "Replace an existing package-lock.json" to regenerate.
+#   --ref <branch>`); tick "Replace" to resolve everything again from scratch.
 
 on:
   push:
@@ -17,7 +20,7 @@ on:
   workflow_dispatch:
     inputs:
       regenerate:
-        description: 'Replace an existing package-lock.json'
+        description: 'Replace: resolve both lockfiles again from scratch'
         type: boolean
         default: false
 
@@ -46,51 +49,36 @@ jobs:
         with:
           node-version: 22
 
-      - name: Decide which lockfiles to (re)generate
-        id: which
-        run: |
-          app=false; fn=false
-          if [ "${{ inputs.regenerate }}" == "true" ]; then rm -f package-lock.json functions/package-lock.json; fi
-          [ -f package-lock.json ] || app=true
-          [ -f functions/package-lock.json ] || fn=true
-          if [ "$app" == "false" ] && [ "$fn" == "false" ]; then
-            if [ "${{ github.event_name }}" == "push" ]; then
-              echo "Both lockfiles exist; nothing to generate on push."
-              echo "skip=true" >> "$GITHUB_OUTPUT"; exit 0
-            fi
-            echo "::error::Both lockfiles already exist. Re-run with 'Replace an existing package-lock.json' ticked to regenerate them."
-            exit 1
-          fi
-          echo "skip=false" >> "$GITHUB_OUTPUT"
-          echo "app=$app" >> "$GITHUB_OUTPUT"; echo "functions=$fn" >> "$GITHUB_OUTPUT"
-
-      - name: Resolve and install from registry.npmjs.org (app)
-        if: steps.which.outputs.app == 'true'
+      - name: Update lockfiles from registry.npmjs.org
+        id: sync
         run: |
           mkdir -p ci-logs
           { echo "node $(node -v) / npm $(npm -v)"; npm config get registry; } | tee ci-logs/lockfile-00-env.log
-          npm install --no-audit --no-fund 2>&1 | tee ci-logs/lockfile-01-npm-install.log
-
-      - name: Resolve and install from registry.npmjs.org (functions)
-        if: steps.which.outputs.functions == 'true'
-        run: |
-          mkdir -p ci-logs
-          npm install --prefix functions --no-audit --no-fund 2>&1 | tee ci-logs/lockfile-01b-functions-npm-install.log
+          if [ "${{ inputs.regenerate }}" == "true" ]; then rm -f package-lock.json functions/package-lock.json; fi
+          npm install --package-lock-only --no-audit --no-fund 2>&1 | tee ci-logs/lockfile-01-app.log
+          npm install --package-lock-only --prefix functions --no-audit --no-fund 2>&1 | tee ci-logs/lockfile-01b-functions.log
+          git add -N package-lock.json functions/package-lock.json
+          if git diff --quiet -- package-lock.json functions/package-lock.json; then
+            echo "Lockfiles already match package.json; nothing to commit."
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+          else
+            git diff --stat -- package-lock.json functions/package-lock.json | tee ci-logs/lockfile-02-diffstat.log
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+          fi
 
       - name: Verify every package resolves from the official registry
-        if: steps.which.outputs.skip != 'true'
+        if: steps.sync.outputs.changed == 'true'
         run: |
-          mkdir -p ci-logs
-          { node scripts/check-lockfile-registry.mjs package-lock.json && node scripts/check-lockfile-registry.mjs functions/package-lock.json; } 2>&1 | tee ci-logs/lockfile-02-registry-check.log
+          { node scripts/check-lockfile-registry.mjs package-lock.json && node scripts/check-lockfile-registry.mjs functions/package-lock.json; } 2>&1 | tee ci-logs/lockfile-03-registry-check.log
 
       - name: Expo SDK compatibility check
-        if: steps.which.outputs.skip != 'true'
+        if: steps.sync.outputs.changed == 'true'
         run: |
-          [ -d node_modules ] || npm ci --no-audit --no-fund > /dev/null
-          npx expo install --check 2>&1 | tee ci-logs/lockfile-03-expo-install-check.log
+          npm ci --no-audit --no-fund > ci-logs/lockfile-04-npm-ci.log 2>&1
+          npx expo install --check 2>&1 | tee ci-logs/lockfile-05-expo-install-check.log
 
-      - name: Upload lockfile and logs
-        if: always() && steps.which.outputs.skip != 'true'
+      - name: Upload lockfiles and logs
+        if: always()
         uses: actions/upload-artifact@v7
         with:
           name: lockfile-and-logs
@@ -100,22 +88,18 @@ jobs:
             ci-logs/
 
       - name: Commit lockfiles
-        if: steps.which.outputs.skip != 'true'
+        if: steps.sync.outputs.changed == 'true'
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add package-lock.json functions/package-lock.json
-          if git diff --cached --quiet; then
-            echo "Lockfiles unchanged; nothing to commit."
-          else
-            git commit -m "chore: add package-lock.json files (app: Expo SDK 58; functions)" \
-                       -m "Generated by the 'Generate lockfile' workflow (run ${GITHUB_RUN_ID}) with npm $(npm -v) from registry.npmjs.org."
-            git push origin "HEAD:${GITHUB_REF_NAME}"
-          fi
+          git commit -m "chore: sync package-lock.json files with package.json (app: Expo SDK 58; functions)" \
+                     -m "Generated by the 'Generate lockfile' workflow (run ${GITHUB_RUN_ID}) with npm $(npm -v) from registry.npmjs.org."
+          git push origin "HEAD:${GITHUB_REF_NAME}"
 
       # Pushes made with GITHUB_TOKEN do not trigger workflows, so start them explicitly.
       - name: Start CI and secret scan on the lockfile commit
-        if: steps.which.outputs.skip != 'true'
+        if: steps.sync.outputs.changed == 'true'
         env:
           GH_TOKEN: ${{ github.token }}
         run: |

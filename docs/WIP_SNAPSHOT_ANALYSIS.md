@@ -27,7 +27,7 @@ Both remove the same V1 modules (client-side AI, fabricated prices, mocks, dead 
 | `ErrorBoundary` | Restyled with tokens | Functional changes only | Cosmetic; M4 |
 | Auth typing | `context/AuthContext.tsx` (TypeScript) | `AuthContext.jsx` + `AuthContext.types.ts` (JSDoc-typed) | Equivalent; M1 version is covered by tests |
 | Auth helper name | `useAuthState` (not a hook) kept | Renamed `subscribeToAuthState` | M1 better |
-| `tokens.ts` | Same values; exported as `color` | Exported as `colors` | Equivalent (M1 values verified by 46 tests) |
+| `tokens.ts` | Same values; exported as `color` | Exported as `colors` | Equivalent (M1 values verified by 32 token tests) |
 | Screens | `ShoppingListScreen.jsx` name; Home/Pantry/Profile changes similar to M1 | `ListsScreen.jsx` | Equivalent |
 | Credentials | 0 secret patterns; no hard-coded Firebase project (gitleaks full-history scan includes this branch: 0 findings) | Same | Clean |
 

@@ -9,7 +9,7 @@ import {
     updateUserProfile,
     subscribeToAuthState,
 } from '@/firebase/authHelpers';
-import { handleError } from '@/errors/errorHandler';
+import { handleError, LEGACY_ERROR_LOG_KEY } from '@/errors/errorHandler';
 
 /** @type {import('react').Context<import('./AuthContext.types').AuthContextValue | undefined>} */
 export const AuthContext = createContext(undefined);
@@ -30,7 +30,8 @@ export const AuthProvider = ({ children }) => {
     const clearError = useCallback(() => setError(null), []);
 
     useEffect(() => {
-        AsyncStorage.removeItem(LEGACY_UID_KEY).catch(() => {});
+        // Remove data V1 left on the device: the UID under "userToken" and persisted error messages.
+        AsyncStorage.multiRemove([LEGACY_UID_KEY, LEGACY_ERROR_LOG_KEY]).catch(() => {});
 
         const unsubscribe = subscribeToAuthState(async (firebaseUser) => {
             if (firebaseUser) {

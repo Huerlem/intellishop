@@ -25,6 +25,7 @@ jest.mock('@react-native-async-storage/async-storage', () =>
   require('@react-native-async-storage/async-storage/jest/async-storage-mock')
 );
 jest.mock('@/errors/errorHandler', () => ({
+  LEGACY_ERROR_LOG_KEY: 'errorLogs',
   handleError: (error: { message?: string } | undefined) => ({ message: error?.message ?? 'error', code: 'TEST' }),
 }));
 jest.mock('expo-crypto', () => ({ randomUUID: () => require('crypto').randomUUID() }));

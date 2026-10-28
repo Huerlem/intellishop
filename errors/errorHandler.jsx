@@ -1,8 +1,4 @@
-import React from 'react';
-import { Alert, Platform } from 'react-native';
-import * as Application from 'expo-application';
-import Constants from 'expo-constants';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import { Alert } from 'react-native';
 
 //Common error code
 export const ERROR_CODES = {
@@ -66,33 +62,22 @@ const ERROR_MESSAGES = {
 };
 
 /**
- * Function to log errors to console (substitute for analytics)
- * This will be replaced with actual analytics integration later
+ * Logs an error without persisting it on the device.
+ * Production builds log only the internal error code; development builds also log the mapped,
+ * user-facing message. Raw error messages are never logged or stored (they can contain personal
+ * data such as an email address). V1 kept the last 50 messages in AsyncStorage ("errorLogs");
+ * that key is cleared at start-up (see clearLegacyErrorLog).
  */
 const logErrorToConsole = (errorCode, errorMessage) => {
-    console.error(`[ERROR][${errorCode}]: ${errorMessage}`);
-    
-    // Save error to AsyncStorage for debugging purposes
-    try {
-        (async () => {
-            const errorsJSON = await AsyncStorage.getItem('errorLogs');
-            const errors = errorsJSON ? JSON.parse(errorsJSON) : [];
-            errors.unshift({
-                code: errorCode,
-                message: errorMessage,
-                timestamp: new Date().toISOString(),
-                device: Platform.OS,
-                appVersion: Application.nativeApplicationVersion || 'unknown'
-            });
-            
-            // Keep only the last 50 errors
-            const trimmedErrors = errors.slice(0, 50);
-            await AsyncStorage.setItem('errorLogs', JSON.stringify(trimmedErrors));
-        })();
-    } catch (e) {
-        console.error('Failed to save error log:', e);
+    if (__DEV__) {
+        console.error(`[ERROR][${errorCode}]: ${errorMessage}`);
+    } else {
+        console.error(`[ERROR][${errorCode}]`);
     }
 };
+
+/** AsyncStorage key used by V1 to persist error messages on the device. */
+export const LEGACY_ERROR_LOG_KEY = 'errorLogs';
 
 /**
  * Map Firebase errors to internal error codes

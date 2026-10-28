@@ -3,6 +3,7 @@
  * - the onAuthStateChanged listener was never unsubscribed (async effect returned a Promise);
  * - `updateProfile` referenced an out-of-scope variable in its catch block.
  */
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { act, render, screen } from '@testing-library/react-native';
 import { Text } from 'react-native';
 
@@ -87,4 +88,13 @@ it('reports a profile update failure instead of throwing', async () => {
     result = await latest!.updateProfile({ displayName: 'New Name' });
   });
   expect(result?.success).toBe(false);
+});
+
+it('removes data V1 left on the device (UID under "userToken" and persisted error messages)', async () => {
+  await render(
+    <AuthProvider>
+      <Probe />
+    </AuthProvider>
+  );
+  expect(AsyncStorage.multiRemove).toHaveBeenCalledWith(['userToken', 'errorLogs']);
 });

@@ -20,7 +20,8 @@ import Button from '@/components/ui/Button';
 import LoadingSpinner from '@/components/common/LoadingSpinner';
 
 export default function ForgotPassword() {
-  const { resetPassword, error, loading, setError } = useAuth();
+  // V1 read `resetPassword`, which useAuth never provided, so every reset attempt threw a TypeError.
+  const { forgotPassword, error, loading, setError } = useAuth();
   const router = useRouter();
 
   const [email, setEmail] = useState('');
@@ -46,10 +47,15 @@ export default function ForgotPassword() {
     if (!validateForm()) return;
 
     try {
-      await resetPassword(email);
-      setResetSent(true);
-    } catch (err) {
-      Alert.alert('Error', err.message || 'Something went wrong');
+      const result = await forgotPassword(email.trim());
+      if (result?.success) {
+        setResetSent(true);
+      } else {
+        // Do not show raw Firebase messages: they can reveal whether an account exists.
+        Alert.alert('Reset email not sent', 'Please check the email address and try again.');
+      }
+    } catch {
+      Alert.alert('Reset email not sent', 'Something went wrong. Please try again later.');
     }
   };
 

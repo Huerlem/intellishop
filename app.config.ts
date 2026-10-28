@@ -45,8 +45,9 @@ const variant = VARIANTS[APP_ENV];
 export default ({ config }: ConfigContext): ExpoConfig => ({
   ...config,
   name: variant.name,
-  // Slug kept from V1 so an existing EAS project link (if any) is preserved.
-  slug: 'intellishop-new',
+  // Must match the EAS project below. Taken from the owner's local V1 app.config.js
+  // (the GitHub copy's app.json used "intellishop-new", which was not the linked project).
+  slug: 'intellishop',
   scheme: 'intellishop',
   version: '1.0.0',
   orientation: 'portrait',
@@ -94,5 +95,10 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   ],
   extra: {
     appEnv: APP_ENV,
+    eas: {
+      // Public identifier of the existing EAS project (not a secret). Owner to confirm it is
+      // the EAS project to keep using (docs/OWNER_ACTIONS_BEFORE_M2.md).
+      projectId: 'ad1df46f-81bc-491f-b80f-5a7c81e0eae2',
+    },
   },
 });

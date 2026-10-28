@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| Version | 0.1 (draft) |
+| Version | 0.2 (draft; DPIA required vs precautionary distinguished) |
 | Date | 28 October 2026 |
 | Assessor | Prepared by the development assistant for the controller; **controller decision required** |
 | Basis | `DATA_FLOW_INVENTORY.md` v0.1; UK GDPR Art. 35; ICO list of processing likely to result in high risk (S-07) |
@@ -27,17 +27,20 @@ Additional factors from Art. 35(3) and (1):
 - **International transfer** of AI request content to the provider (US or global inference — S-34).
 - **New processor relationships** (AI provider, RevenueCat).
 
-## 2. Conclusion
+## 2. Conclusion (corrected in v0.2)
 
-The ICO says processing involving innovative technology requires a DPIA when **combined with any other criterion** (S-07). Here AI is combined with special category data and a potential physical-harm consequence of inaccurate output.
+The ICO says that "in most cases, a combination of two" of the nine European (WP29) criteria indicates the need for a DPIA. A DPIA may still be needed with one criterion, and doing one is then "good practice" (S-38, accessed 28 Oct 2026).
 
-**Outcome: a full DPIA is required** before releasing:
-- the dietary and allergy preferences feature, and
-- any AI feature that receives those preferences.
+| Processing | WP29 criteria met | DPIA status | Basis |
+|---|---|---|---|
+| Core account, lists, pantry, shopping mode (no AI, no dietary data) | None of significance | **Not required.** Reasons documented here (Art. 5(2) accountability) | S-38 |
+| AI suggestions **without** dietary or allergy data | Innovative technology (1) | **Precautionary**: recommended, good practice | S-07, S-38 |
+| AI suggestions **with** allergies or medical diets (health data) | Innovative technology + sensitive data (2) | **Required** before release | S-07 (innovative technology combined with another criterion), S-38 |
+| AI with only religious-diet options (halal, kosher) | Innovative technology + (probably) sensitive data | **Treat as required** (precaution; *legal review*) | S-37 |
+| Neutral 'ingredients to avoid' list (no health label; DPIA-1 alternative) | Innovative technology; sensitive-data criterion probably not met | **Precautionary** | S-37 intention test |
+| Large-scale special category processing (Art. 35(3)(b)) | — | Not met at launch scale; re-assess as the user base grows | S-01 Art. 35(3) |
 
-A DPIA is **recommended** (good practice) for the AI features without dietary data, because they involve innovative technology and an international transfer. The simplest approach is one DPIA covering all AI processing.
-
-Core lists, pantry and accounts **without** AI or dietary data do not, on this screening, require a DPIA. This must be recorded and revisited if the scope changes.
+**Decision for the owner:** completing **one DPIA covering all AI processing** before M3 release satisfies the mandatory case and the precautionary case together. This remains the recommendation.
 
 ## 3. Scope of the full DPIA (to be completed before M3 release)
 

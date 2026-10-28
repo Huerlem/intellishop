@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| Version | 0.1 (draft for owner review) |
+| Version | 0.2 (draft for owner review; D15 basis corrected) |
 | Date | 28 October 2026 |
 | Basis | Source code on `feature/v2-production-rebuild` at commit `c836629`; planned architecture in `AI_ARCHITECTURE.md`, `SUBSCRIPTION_ARCHITECTURE.md`, `SUBSCRIPTION_ENTITLEMENTS.md` |
 | Status | **Draft.** Not legal advice. Planned items are marked as such and must be re-verified against the code that actually ships. |
@@ -62,7 +62,7 @@ Source IDs (S-xx) refer to the source register in `LEGAL_COMPLIANCE_MATRIX.md` �
 | # | Data | Where stored | Purpose | Proposed basis | Retention | In code? | Findings |
 |---|---|---|---|---|---|---|---|
 | D14 | **Allergies and intolerances** | Planned: `users/{uid}/private/preferences` | Exclude or warn about ingredients in AI recipes | Art. 6(1)(a) consent **and** Art. 9(2)(a) **explicit consent** (health data — S-01 Art. 4(15), Art. 9) | Until the user removes them, withdraws consent or deletes the account | Planned (M3) | Optional; off by default; separate from Terms; withdrawable in Settings. Apple category: Health (S-24). |
-| D15 | Dietary preferences (e.g. vegetarian, vegan, halal, kosher) | As D14 | Recipe filtering | Consent; **explicit consent** where the preference may reveal religious or philosophical belief (Art. 9) or health | As D14 | Planned (M3) | Treat the whole preference set as special category to avoid splitting consent per item. Apple: "Sensitive Info" includes religious or philosophical beliefs (S-24). |
+| D15 | Dietary preferences (e.g. vegetarian, vegan, halal, kosher) | As D14 | Recipe filtering | Lifestyle diets: consent (ordinary personal data). Religious diets: **explicit consent** as a precaution (may reveal belief). Medical diets: **explicit consent** (health) — see matrix DP-05 | As D14 | Planned (M3) | One explicit-consent flow for all dietary data is a voluntary stricter safeguard (v0.2 correction C-3). Apple: "Sensitive Info" includes religious or philosophical beliefs (S-24). |
 | D16 | AI request content: ingredient names, quantities, units, expiry dates, recipe mode, dietary and allergy constraints (if consented), servings | Sent from Cloud Functions to the AI provider | Generate recipes, suggestions and optimisation | Contract (feature the user requests); allergy and diet parts only with D14/D15 consent | Provider retention per its terms. Anthropic's page says prompts and outputs are not retained by default except for specified "Covered Models", and flagged content may be kept up to 2 years (S-33). **To be confirmed contractually.** | Planned (M3) | **Apple 5.1.2(i): explicit permission is required before personal data is shared with third-party AI (S-21).** Never send email, name, address or user ID to the provider. Use a pseudonymous request ID. |
 | D17 | AI outputs (recipes, suggestions) and cache | Planned: Firestore cache keyed by input hash | Display; avoid repeat cost | Contract | Owner decision (e.g. 30 days for the cache; favourites until deleted) | Planned (M3) | Recipe favourites = user content (D18). |
 | D18 | Recipe favourites | Planned | Saved recipes | Contract | Until deleted | Planned (M3) | — |

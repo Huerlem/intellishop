@@ -54,3 +54,6 @@ coverage/
 
 # Keep validation evidence logs that are deliberately committed
 !docs/validation/*.log
+
+# Generated legal website (build with npm run legal:build; never deployed automatically)
+legal-site/dist/

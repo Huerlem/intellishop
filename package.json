@@ -15,7 +15,12 @@
     "test": "jest --ci",
     "export:ios": "expo export --platform ios --output-dir dist",
     "scan:bundle": "node scripts/scan-bundle-for-secrets.mjs dist",
-    "doctor": "expo-doctor"
+    "doctor": "expo-doctor",
+    "legal:build": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/legal/build-legal-site.mjs",
+    "legal:report": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/legal/build-legal-site.mjs --report",
+    "legal:emit-app": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/legal/build-legal-site.mjs --emit-app",
+    "legal:check-app": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/legal/build-legal-site.mjs --check-app",
+    "legal:release": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/legal/build-legal-site.mjs --release"
   },
   "dependencies": {
     "@expo-google-fonts/inter": "^0.4.2",

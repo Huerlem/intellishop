@@ -12,13 +12,12 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 
 import { AuthProvider } from '@/context/AuthContext';
-import { ShoppingListProvider } from '@/context/ShoppingListContext';
-import { StockProvider } from '@/context/StockContext';
 import ErrorBoundary from '@/errors/ErrorBoundary';
 import { isFirebaseConfigured, missingFirebaseConfigKeys } from '@/firebase/config';
 import { useAuth } from '@/hooks/useAuth';
 import { RootStack } from '@/src/navigation/RootStack';
 import { ConfigurationErrorScreen } from '@/src/screens/ConfigurationErrorScreen';
+import { AppDataProvider } from '@/src/state/AppDataProvider';
 
 // Keep the native splash screen up until fonts and the first auth state are known.
 SplashScreen.preventAutoHideAsync().catch(() => {});
@@ -49,12 +48,10 @@ export default function RootLayout() {
       <SafeAreaProvider>
         <ErrorBoundary>
           <AuthProvider>
-            <ShoppingListProvider>
-              <StockProvider>
-                <StatusBar style="dark" />
-                <AuthGate />
-              </StockProvider>
-            </ShoppingListProvider>
+            <AppDataProvider>
+              <StatusBar style="dark" />
+              <AuthGate />
+            </AppDataProvider>
           </AuthProvider>
         </ErrorBoundary>
       </SafeAreaProvider>

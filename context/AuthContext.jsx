@@ -13,6 +13,7 @@ import {
     acceptTerms as acceptTermsHelper,
 } from '@/firebase/authHelpers';
 import { handleError, LEGACY_ERROR_LOG_KEY } from '@/errors/errorHandler';
+import { CURRENT_TERMS_VERSION } from '@/src/legal/versions';
 
 /** @type {import('react').Context<import('./AuthContext.types').AuthContextValue | undefined>} */
 export const AuthContext = createContext(undefined);
@@ -71,7 +72,7 @@ export const AuthProvider = ({ children }) => {
             setError(result.error);
             return { success: false, error: result.error, code: result.code };
         } catch (err) {
-            const handled = handleError(err, { title: 'Login Failed' });
+            const handled = handleError(err, { title: 'Login Failed', silent: true });
             setError(handled.message);
             return { success: false, error: handled.message, code: handled.code };
         } finally {
@@ -86,13 +87,13 @@ export const AuthProvider = ({ children }) => {
             const result = await registerUser(email, password, { displayName, termsAccepted });
             if (result.success) {
                 setUser(result.user);
-                setUserData({ displayName, email });
+                setUserData({ displayName, email, termsVersion: CURRENT_TERMS_VERSION });
                 return { success: true, user: result.user };
             }
             setError(result.error);
             return { success: false, error: result.error, code: result.code };
         } catch (err) {
-            const handled = handleError(err, { title: 'Registration Failed' });
+            const handled = handleError(err, { title: 'Registration Failed', silent: true });
             setError(handled.message);
             return { success: false, error: handled.message, code: handled.code };
         } finally {
@@ -110,11 +111,11 @@ export const AuthProvider = ({ children }) => {
                 setUserData(null);
                 return { success: true };
             }
-            const handled = handleError(new Error(result.error || 'Logout failed'), { title: 'Logout Failed' });
+            const handled = handleError(new Error(result.error || 'Logout failed'), { title: 'Logout Failed', silent: true });
             setError(handled.message);
             return { success: false, error: handled.message };
         } catch (err) {
-            const handled = handleError(err, { title: 'Logout Failed' });
+            const handled = handleError(err, { title: 'Logout Failed', silent: true });
             setError(handled.message);
             return { success: false, error: handled.message, code: handled.code };
         } finally {
@@ -128,7 +129,7 @@ export const AuthProvider = ({ children }) => {
         try {
             return await resetPassword(email);
         } catch (err) {
-            const handled = handleError(err, { title: 'Password Reset Failed' });
+            const handled = handleError(err, { title: 'Password Reset Failed', silent: true });
             setError(handled.message);
             return { success: false, error: handled.message, code: handled.code };
         } finally {
@@ -147,11 +148,11 @@ export const AuthProvider = ({ children }) => {
                 setUserData((prev) => ({ ...prev, ...newData }));
                 return { success: true };
             }
-            const handled = handleError(new Error(result.error || 'Update failed'), { title: 'Update Failed' });
+            const handled = handleError(new Error(result.error || 'Update failed'), { title: 'Update Failed', silent: true });
             setError(handled.message);
             return { success: false, error: handled.message, code: handled.code };
         } catch (err) {
-            const handled = handleError(err, { title: 'Update Failed' });
+            const handled = handleError(err, { title: 'Update Failed', silent: true });
             setError(handled.message);
             return { success: false, error: handled.message, code: handled.code };
         } finally {

@@ -83,15 +83,6 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
         backgroundColor: '#F8FAFC',
       },
     ],
-    [
-      'expo-image-picker',
-      {
-        photosPermission:
-          'IntelliShop uses your photo library only when you choose a new profile picture.',
-        cameraPermission: false,
-        microphonePermission: false,
-      },
-    ],
   ],
   extra: {
     appEnv: APP_ENV,

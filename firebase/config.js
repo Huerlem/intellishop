@@ -44,10 +44,15 @@ export const missingFirebaseConfigKeys = Object.entries(firebaseConfig)
 
 export const isFirebaseConfigured = missingFirebaseConfigKeys.length === 0;
 
+/** @type {import('firebase/app').FirebaseApp | null} */
 let app = null;
+/** @type {import('firebase/auth').Auth | null} */
 let auth = null;
+/** @type {import('firebase/firestore').Firestore | null} */
 let db = null;
+/** @type {import('firebase/storage').FirebaseStorage | null} */
 let storage = null;
+/** @type {import('firebase/functions').Functions | null} */
 let functions = null;
 
 if (isFirebaseConfigured) {

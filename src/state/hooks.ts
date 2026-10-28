@@ -3,17 +3,22 @@
  * repositories need for Free-limit checks, and turn errors into displayable messages.
  * Security Rules re-check every limit on the server.
  */
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 
 import { addQuantities, type CanonicalUnit } from '@/shared/domain/units';
 import { normaliseItemName } from '@/shared/domain/items';
 import { introCreditsRemaining, PREMIUM_AI_QUOTA, PLAN_LIMITS, featureAccess } from '@/shared/entitlements/plans';
 import { useAuth } from '@/hooks/useAuth';
+import { ServerError } from '@/src/data/accountRepository';
 import { DataError } from '@/src/data/firestore';
 import * as lists from '@/src/data/listsRepository';
 import * as pantryRepo from '@/src/data/pantryRepository';
+import { subscribeTrip, type Trip } from '@/src/data/tripsRepository';
 import type { ItemInput, ListItem, PantryInput, ShoppingList, SyncState } from '@/src/data/types';
-import { useAppData, type LoadStatus } from './AppDataProvider';
+import { useAppData } from './AppDataProvider';
+import { useNow } from './clock';
+import { useLiveQuery, type LoadStatus } from './liveQuery';
+import { pantrySignals } from '@/src/data/pantrySignals';
 
 function requireUid(uid: string | null): string {
   if (!uid) throw new DataError('NOT_SIGNED_IN', 'Please sign in again.');
@@ -57,27 +62,14 @@ export function useLists() {
 
 export type ItemsState = { status: LoadStatus; items: ListItem[]; error: DataError | null; sync: SyncState };
 
+const NO_ITEMS: ListItem[] = [];
+
 export function useListItems(listId: string | undefined) {
   const { uid } = useAppData();
   const { plan } = usePlan();
-  const [state, setState] = useState<ItemsState>({ status: 'loading', items: [], error: null, sync: { fromCache: false, hasPendingWrites: false } });
   const [attempt, setAttempt] = useState(0);
-
-  useEffect(() => {
-    if (!uid || !listId) return;
-    setState((s) => ({ ...s, status: 'loading' }));
-    try {
-      return lists.subscribeItems(
-        uid,
-        listId,
-        (snap) => setState({ status: 'ready', items: snap.data, error: null, sync: snap.sync }),
-        (error) => setState((s) => ({ ...s, status: 'error', error }))
-      );
-    } catch (e) {
-      setState((s) => ({ ...s, status: 'error', error: e as DataError }));
-      return undefined;
-    }
-  }, [uid, listId, attempt]);
+  const res = useLiveQuery<ListItem[]>(uid && listId ? `${uid}/${listId}#${attempt}` : null, (ok, fail) => lists.subscribeItems(uid!, listId!, (snap) => ok(snap.data, snap.sync), fail), NO_ITEMS);
+  const state: ItemsState = { status: res.status, items: res.data, error: res.error, sync: res.sync };
 
   const items = state.items;
 
@@ -125,8 +117,8 @@ export function useListItems(listId: string | undefined) {
 export function usePantry() {
   const { uid, pantry: res } = useAppData();
   const { plan } = usePlan();
-  const now = Date.now();
-  const signals = useMemo(() => pantryRepo.pantrySignals(res.data, now), [res.data, Math.floor(now / 3_600_000)]); // eslint-disable-line react-hooks/exhaustive-deps
+  const now = useNow();
+  const signals = useMemo(() => pantrySignals(res.data, now), [res.data, now]);
 
   const add = useCallback((input: PantryInput) => pantryRepo.addPantryItem(requireUid(uid), input, { plan, pantryItems: res.data.length }), [uid, plan, res.data.length]);
   const update = useCallback((itemId: string, patch: Parameters<typeof pantryRepo.updatePantryItem>[2]) => pantryRepo.updatePantryItem(requireUid(uid), itemId, patch), [uid]);
@@ -146,9 +138,16 @@ export function usePantry() {
   };
 }
 
+/** Live shopping trip by ID (Shopping Mode, Finish, Pantry Update). */
+export function useTrip(tripId: string | undefined) {
+  const { uid } = useAppData();
+  const res = useLiveQuery<Trip | null>(uid && tripId ? `${uid}/${tripId}` : null, (ok, fail) => subscribeTrip(uid!, tripId!, ok, fail), null);
+  return { status: res.status, trip: res.data, error: res.error };
+}
+
 /** User-facing message for any error thrown by the data layer. */
 export function errorMessage(error: unknown): string {
-  if (error instanceof DataError) return error.message;
+  if (error instanceof DataError || error instanceof ServerError) return error.message;
   if (error instanceof Error && error.message) return 'Something went wrong. Please try again.';
   return 'Something went wrong. Please try again.';
 }

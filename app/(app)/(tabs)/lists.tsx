@@ -1,2 +1,2 @@
-// Lists tab. The V1 shopping-list screen is retained until the Figma P02/C6 rebuild (milestone M4).
+// Lists tab — all lists (Figma clarification C6/C11).
 export { default } from '@/src/screens/ListsScreen';

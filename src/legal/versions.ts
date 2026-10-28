@@ -16,3 +16,18 @@ export function needsTermsAcceptance(accepted: string | null | undefined): boole
   if (!accepted) return true;
   return majorOf(accepted) < majorOf(CURRENT_TERMS_VERSION);
 }
+
+/**
+ * Consent text versions (L3-01 AI, L3-03 dietary). Changing what is sent, the purpose or the AI
+ * provider requires a new version, which asks the user again.
+ */
+export const AI_CONSENT_VERSION = '1.0.0';
+export const DIETARY_CONSENT_VERSION = '1.0.0';
+
+/**
+ * AI provider named on the consent screen (Apple Guideline 5.1.2(i)). The server adapter is
+ * Anthropic's Messages API (functions/src/providers/anthropic.ts). [OWNER TO CONFIRM before
+ * release: provider contract and data terms — LEGAL_RELEASE_GATE B-L05.] Changing the provider
+ * requires a new AI_CONSENT_VERSION.
+ */
+export const AI_PROVIDER_DISPLAY_NAME = 'Anthropic (Claude)';

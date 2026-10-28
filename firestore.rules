@@ -228,13 +228,20 @@ service cloud.firestore {
           && request.resource.data.finishedAt == null
           && request.resource.data.lines is map && request.resource.data.lines.size() == 0
           && request.resource.data.actualTotalPence == null;
-        allow update: if isOwner(uid)
-          && resource.data.status == 'active'
-          && changed().hasOnly(['lines', 'status', 'finishedAt', 'actualTotalPence'])
-          && request.resource.data.lines is map && request.resource.data.lines.size() <= 500
-          && request.resource.data.status in ['active', 'finished']
-          && (request.resource.data.status == 'active' || request.resource.data.finishedAt == request.time)
-          && pence(request.resource.data.actualTotalPence);
+        allow update: if isOwner(uid) && (
+          (resource.data.status == 'active'
+            && changed().hasOnly(['lines', 'status', 'finishedAt', 'actualTotalPence'])
+            && request.resource.data.lines is map && request.resource.data.lines.size() <= 500
+            && request.resource.data.status in ['active', 'finished']
+            && (request.resource.data.status == 'active' || request.resource.data.finishedAt == request.time)
+            && pence(request.resource.data.actualTotalPence))
+          // Pantry Update (P09): a finished trip records what was applied to the Pantry (for undo
+          // and to prevent applying twice). Nothing else on a finished trip can change.
+          || (resource.data.status == 'finished'
+            && changed().hasOnly(['pantryApplied'])
+            && request.resource.data.pantryApplied is map
+            && request.resource.data.pantryApplied.size() <= 500)
+        );
         allow delete: if isOwner(uid);
       }
 

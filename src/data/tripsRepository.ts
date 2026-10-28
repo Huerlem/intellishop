@@ -8,11 +8,17 @@
 import { doc, onSnapshot, orderBy, query, serverTimestamp, where, writeBatch, collection, limit, deleteField } from 'firebase/firestore';
 
 import { normaliseUnit, validateQuantity, type CanonicalUnit } from '@/shared/domain/units';
-import { DataError, mapFirestoreError, num, refs, requireDb, str, toMillis } from './firestore';
+import { DataError, mapFirestoreError, num, refs, requireDb, str, toMillis, commitBatch } from './firestore';
 
 export type TripOutcome = 'collected' | 'substituted' | 'unavailable';
 
-export type TripLine = { outcome: TripOutcome; quantity: number; unit: CanonicalUnit; substituteName?: string };
+export type TripLine = { outcome: TripOutcome; quantity: number; unit: CanonicalUnit; substituteName?: string; /** item name at the time of shopping */ name?: string };
+
+/** What the Pantry Update step did with a trip line (stored on the finished trip; undoable). */
+export type PantryAppliedEntry =
+  | { status: 'applied'; via: 'auto' | 'review'; kind: 'increase'; pantryItemId: string; prevQuantity: number; prevUnit: CanonicalUnit; prevLastPurchasedAt: number | null }
+  | { status: 'applied'; via: 'auto' | 'review'; kind: 'add'; pantryItemId: string }
+  | { status: 'undone' | 'dismissed' };
 
 export type Trip = {
   id: string;
@@ -23,6 +29,7 @@ export type Trip = {
   finishedAt: number | null;
   lines: Record<string, TripLine>;
   actualTotalPence: number | null;
+  pantryApplied: Record<string, PantryAppliedEntry>;
 };
 
 const tripsCol = (uid: string) => collection(requireDb(), 'users', uid, 'trips');
@@ -39,6 +46,7 @@ function mapLines(raw: unknown): Record<string, TripLine> {
       quantity: num(v.quantity, 1),
       unit: normaliseUnit(str(v.unit)) ?? 'unit',
       ...(typeof v.substituteName === 'string' ? { substituteName: v.substituteName } : {}),
+      ...(typeof v.name === 'string' ? { name: v.name } : {}),
     };
   }
   return out;
@@ -54,7 +62,29 @@ export function mapTrip(id: string, d: Record<string, unknown>): Trip {
     finishedAt: toMillis(d.finishedAt),
     lines: mapLines(d.lines),
     actualTotalPence: typeof d.actualTotalPence === 'number' ? d.actualTotalPence : null,
+    pantryApplied: mapApplied(d.pantryApplied),
   };
+}
+
+function mapApplied(raw: unknown): Record<string, PantryAppliedEntry> {
+  const out: Record<string, PantryAppliedEntry> = {};
+  if (!raw || typeof raw !== 'object') return out;
+  for (const [id, v] of Object.entries(raw as Record<string, Record<string, unknown>>)) {
+    if (!v || typeof v !== 'object') continue;
+    if (v.status === 'undone' || v.status === 'dismissed') out[id] = { status: v.status };
+    else if (v.status === 'applied' && v.kind === 'add' && typeof v.pantryItemId === 'string') out[id] = { status: 'applied', via: v.via === 'review' ? 'review' : 'auto', kind: 'add', pantryItemId: v.pantryItemId };
+    else if (v.status === 'applied' && v.kind === 'increase' && typeof v.pantryItemId === 'string')
+      out[id] = {
+        status: 'applied',
+        via: v.via === 'review' ? 'review' : 'auto',
+        kind: 'increase',
+        pantryItemId: v.pantryItemId,
+        prevQuantity: num(v.prevQuantity, 0),
+        prevUnit: normaliseUnit(str(v.prevUnit)) ?? 'unit',
+        prevLastPurchasedAt: typeof v.prevLastPurchasedAt === 'number' ? v.prevLastPurchasedAt : null,
+      };
+  }
+  return out;
 }
 
 export function subscribeActiveTrips(uid: string, onData: (trips: Trip[]) => void, onError: (e: DataError) => void) {
@@ -63,6 +93,22 @@ export function subscribeActiveTrips(uid: string, onData: (trips: Trip[]) => voi
     (snap) => onData(snap.docs.map((d) => mapTrip(d.id, d.data()))),
     (error) => onError(mapFirestoreError(error))
   );
+}
+
+/** Last few finished trips (Home: "Pantry update waiting"). */
+export function subscribeRecentFinishedTrips(uid: string, onData: (trips: Trip[]) => void, onError: (e: DataError) => void) {
+  return onSnapshot(
+    query(tripsCol(uid), where('status', '==', 'finished'), orderBy('finishedAt', 'desc'), limit(3)),
+    (snap) => onData(snap.docs.map((d) => mapTrip(d.id, d.data()))),
+    (error) => onError(mapFirestoreError(error))
+  );
+}
+
+/** Lines of a finished trip that still need a Pantry decision (not applied, undone or dismissed). */
+export function pendingPantryLines(trip: Trip): string[] {
+  return Object.entries(trip.lines)
+    .filter(([id, l]) => l.outcome !== 'unavailable' && !trip.pantryApplied[id])
+    .map(([id]) => id);
 }
 
 export function subscribeTrip(uid: string, tripId: string, onData: (t: Trip | null) => void, onError: (e: DataError) => void) {
@@ -77,11 +123,7 @@ export async function startTrip(uid: string, list: { id: string; name: string })
   const ref = doc(tripsCol(uid));
   const batch = writeBatch(requireDb());
   batch.set(ref, { listId: list.id, listName: list.name, status: 'active', startedAt: serverTimestamp(), finishedAt: null, lines: {}, actualTotalPence: null });
-  try {
-    await batch.commit();
-  } catch (e) {
-    throw mapFirestoreError(e);
-  }
+  await commitBatch(batch);
   return ref.id;
 }
 
@@ -95,15 +137,17 @@ export async function setLine(uid: string, trip: Trip, itemId: string, line: Tri
   const batch = writeBatch(requireDb());
   batch.update(tripDoc(uid, trip.id), {
     [`lines.${itemId}`]: line
-      ? { outcome: line.outcome, quantity: line.quantity, unit: line.unit, ...(line.substituteName ? { substituteName: line.substituteName.trim().slice(0, 60) } : {}) }
+      ? {
+          outcome: line.outcome,
+          quantity: line.quantity,
+          unit: line.unit,
+          ...(line.substituteName ? { substituteName: line.substituteName.trim().slice(0, 60) } : {}),
+          ...(line.name ? { name: line.name.slice(0, 60) } : {}),
+        }
       : deleteField(),
   });
   batch.update(refs.item(uid, trip.listId, itemId), { checked: line !== null && line.outcome !== 'unavailable', updatedAt: serverTimestamp() });
-  try {
-    await batch.commit();
-  } catch (e) {
-    throw mapFirestoreError(e);
-  }
+  await commitBatch(batch);
 }
 
 export async function finishTrip(uid: string, trip: Trip, actualTotalPence: number | null): Promise<void> {
@@ -112,26 +156,26 @@ export async function finishTrip(uid: string, trip: Trip, actualTotalPence: numb
   }
   const batch = writeBatch(requireDb());
   batch.update(tripDoc(uid, trip.id), { status: 'finished', finishedAt: serverTimestamp(), actualTotalPence });
-  try {
-    await batch.commit();
-  } catch (e) {
-    throw mapFirestoreError(e);
-  }
+  await commitBatch(batch);
 }
 
 export async function cancelTrip(uid: string, trip: Trip): Promise<void> {
   const batch = writeBatch(requireDb());
   batch.delete(tripDoc(uid, trip.id));
-  try {
-    await batch.commit();
-  } catch (e) {
-    throw mapFirestoreError(e);
-  }
+  await commitBatch(batch);
 }
 
 export function tripProgress(trip: Trip, itemIds: string[]) {
   const done = itemIds.filter((id) => trip.lines[id]).length;
   return { done, total: itemIds.length, ratio: itemIds.length ? done / itemIds.length : 0 };
+}
+
+/** Converts trip lines into the input of the Pantry Update planner (shared/shopping/pantryUpdate). */
+export function tripLinesForPantry(trip: Trip, items: { id: string; name: string }[]) {
+  const names = new Map(items.map((i) => [i.id, i.name]));
+  return Object.entries(trip.lines)
+    .map(([listItemId, l]) => ({ listItemId, name: l.name ?? names.get(listItemId) ?? '', outcome: l.outcome, quantity: l.quantity, unit: l.unit, substituteName: l.substituteName }))
+    .filter((l) => l.name);
 }
 
 /** Re-exported for screens that only need ordering. */

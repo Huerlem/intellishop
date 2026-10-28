@@ -19,11 +19,12 @@ import {
   serverTimestamp,
   writeBatch,
 } from 'firebase/firestore';
+import type { DocumentData, UpdateData } from 'firebase/firestore';
 
 import { cleanDisplayName, normaliseCategory, normaliseItemName, validateItemName, validateListName, MAX_NOTES_LENGTH } from '@/shared/domain/items';
 import { normaliseUnit, validateQuantity } from '@/shared/domain/units';
 import { canAddListItem, canCreateList, type PlanId } from '@/shared/entitlements/plans';
-import { DataError, mapFirestoreError, num, refs, requireDb, str, toMillis, type Data } from './firestore';
+import { DataError, mapFirestoreError, num, refs, requireDb, str, toMillis, commitBatch, type Data } from './firestore';
 import type { ItemInput, ListItem, ShoppingList, Snapshot } from './types';
 
 export function mapList(id: string, d: Data): ShoppingList {
@@ -84,11 +85,7 @@ export function subscribeItems(uid: string, listId: string, onData: (s: Snapshot
 
 /** Writes are not awaited for server acknowledgement when offline: Firestore queues them. */
 async function commit(batch: ReturnType<typeof writeBatch>) {
-  try {
-    await batch.commit();
-  } catch (error) {
-    throw mapFirestoreError(error);
-  }
+  await commitBatch(batch);
 }
 
 export async function createList(uid: string, name: string, ctx: { plan: PlanId; activeLists: number }): Promise<string> {
@@ -198,7 +195,7 @@ export async function updateItem(uid: string, listId: string, itemId: string, pa
   if (patch.checked !== undefined) data.checked = patch.checked;
   if (patch.pricePence !== undefined) data.pricePence = patch.pricePence === null ? deleteField() : patch.pricePence;
   const batch = writeBatch(requireDb());
-  batch.update(refs.item(uid, listId, itemId), data);
+  batch.update(refs.item(uid, listId, itemId), data as UpdateData<DocumentData>);
   await commit(batch);
 }
 

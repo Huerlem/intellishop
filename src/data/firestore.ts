@@ -3,7 +3,7 @@
  * typed errors. Every path is user-scoped (`users/{uid}/…`) so Security Rules can express
  * ownership by path (firestore.rules).
  */
-import { collection, doc, type DocumentData, type Firestore } from 'firebase/firestore';
+import { collection, doc, type DocumentData, type Firestore, type WriteBatch } from 'firebase/firestore';
 
 import { db } from '@/firebase/config';
 
@@ -75,3 +75,43 @@ export function mapFirestoreError(error: unknown): DataError {
 }
 
 export type Data = DocumentData;
+
+// ---------------------------------------------------------------------------------------
+// Offline-aware commits. With the Firestore JS SDK, `commit()` resolves only when the server
+// acknowledges the write; offline it stays pending while the change already shows locally
+// (latency compensation). Screens must not hang on that, so a commit counts as "queued" after
+// a short wait. A queued write that the server later rejects is rolled back by Firestore and
+// reported through `onLateWriteError` so the app can tell the user (AppDataProvider).
+// ---------------------------------------------------------------------------------------
+
+type LateWriteListener = (error: DataError) => void;
+const lateWriteListeners = new Set<LateWriteListener>();
+
+export function onLateWriteError(listener: LateWriteListener): () => void {
+  lateWriteListeners.add(listener);
+  return () => void lateWriteListeners.delete(listener);
+}
+
+export const QUEUED_WRITE_WAIT_MS = 1500;
+
+export async function commitBatch(batch: WriteBatch, waitMs = QUEUED_WRITE_WAIT_MS): Promise<'confirmed' | 'queued'> {
+  const pending = batch.commit();
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  const queued = new Promise<'queued'>((resolve) => {
+    timer = setTimeout(() => resolve('queued'), waitMs);
+  });
+  try {
+    const result = await Promise.race([pending.then(() => 'confirmed' as const), queued]);
+    if (result === 'queued') {
+      pending.catch((error) => {
+        const mapped = mapFirestoreError(error);
+        lateWriteListeners.forEach((l) => l(mapped));
+      });
+    }
+    return result;
+  } catch (error) {
+    throw mapFirestoreError(error);
+  } finally {
+    clearTimeout(timer);
+  }
+}

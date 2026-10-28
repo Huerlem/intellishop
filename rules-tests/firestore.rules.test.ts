@@ -193,6 +193,11 @@ describe('trips and favourites', () => {
     await assertSucceeds(db.doc('users/alice/trips/t1').update({ 'lines.i1': { outcome: 'collected', quantity: 1, unit: 'l' } }));
     await assertSucceeds(db.doc('users/alice/trips/t1').update({ status: 'finished', finishedAt: ts(), actualTotalPence: 2350 }));
     await assertFails(db.doc('users/alice/trips/t1').update({ actualTotalPence: 1 }));
+    // Pantry Update records (P09) are the only change allowed on a finished trip.
+    await assertSucceeds(db.doc('users/alice/trips/t1').update({ 'pantryApplied.i1': { status: 'dismissed' } }));
+    await assertFails(db.doc('users/alice/trips/t1').update({ 'pantryApplied.i2': { status: 'dismissed' }, actualTotalPence: 5 }));
+    await assertFails(db.doc('users/alice/trips/t1').update({ 'lines.i2': { outcome: 'collected', quantity: 1, unit: 'l' } }));
+    await assertFails(bob().doc('users/alice/trips/t1').update({ 'pantryApplied.i3': { status: 'dismissed' } }));
   });
 
   it('favourites: create and delete own; no updates', async () => {

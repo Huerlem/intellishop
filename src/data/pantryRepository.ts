@@ -3,12 +3,15 @@
  * (pantryItems) for the Free-plan limit — see listsRepository.ts for the counter pattern.
  */
 import { deleteField, doc, onSnapshot, orderBy, query, serverTimestamp, Timestamp, writeBatch, increment } from 'firebase/firestore';
+import type { DocumentData, UpdateData } from 'firebase/firestore';
 
 import { cleanDisplayName, normaliseCategory, normaliseItemName, validateItemName } from '@/shared/domain/items';
 import { normaliseUnit } from '@/shared/domain/units';
 import { canAddPantryItem, type PlanId } from '@/shared/entitlements/plans';
-import { DataError, mapFirestoreError, num, refs, requireDb, str, toMillis, type Data } from './firestore';
+import { DataError, mapFirestoreError, num, refs, requireDb, str, toMillis, commitBatch, type Data } from './firestore';
 import type { PantryInput, PantryItem, Snapshot } from './types';
+import type { PantryAppliedEntry } from './tripsRepository';
+import type { CanonicalUnit } from '@/shared/domain/units';
 
 export function mapPantryItem(id: string, d: Data): PantryItem {
   const expiryKind = d.expiryKind === 'use_by' || d.expiryKind === 'best_before' ? d.expiryKind : null;
@@ -77,11 +80,7 @@ export async function addPantryItem(uid: string, input: PantryInput, ctx: { plan
     updatedAt: serverTimestamp(),
   });
   batch.set(refs.counters(uid), { pantryItems: increment(1), lastOp: { type: 'pantryAdd', id: itemRef.id }, updatedAt: serverTimestamp() }, { merge: true });
-  try {
-    await batch.commit();
-  } catch (error) {
-    throw mapFirestoreError(error);
-  }
+  await commitBatch(batch);
   return itemRef.id;
 }
 
@@ -102,47 +101,100 @@ export async function updatePantryItem(uid: string, itemId: string, patch: Parti
   } else if (patch.expiryKind !== undefined) data.expiryKind = patch.expiryKind;
   if (patch.lastPurchasedAt !== undefined) data.lastPurchasedAt = patch.lastPurchasedAt === null ? deleteField() : ts(patch.lastPurchasedAt);
   const batch = writeBatch(requireDb());
-  batch.update(refs.pantryItem(uid, itemId), data);
-  try {
-    await batch.commit();
-  } catch (error) {
-    throw mapFirestoreError(error);
-  }
+  batch.update(refs.pantryItem(uid, itemId), data as UpdateData<DocumentData>);
+  await commitBatch(batch);
 }
 
 export async function removePantryItem(uid: string, itemId: string): Promise<void> {
   const batch = writeBatch(requireDb());
   batch.delete(refs.pantryItem(uid, itemId));
   batch.set(refs.counters(uid), { pantryItems: increment(-1), lastOp: { type: 'pantryRemove', id: itemId }, updatedAt: serverTimestamp() }, { merge: true });
-  try {
-    await batch.commit();
-  } catch (error) {
-    throw mapFirestoreError(error);
+  await commitBatch(batch);
+}
+
+export { DAY_MS, daysUntil, pantrySignals } from './pantrySignals';
+
+// ---------------------------------------------------------------------------------------
+// Pantry Update after a shopping trip (Figma P09). Each change is written in ONE batch together
+// with a record on the finished trip (`pantryApplied.{lineId}`), so a change is never applied
+// twice and can be undone. Only additive changes exist here (shared/shopping/pantryUpdate.ts).
+// ---------------------------------------------------------------------------------------
+
+
+const tripRef = (uid: string, tripId: string) => doc(requireDb(), 'users', uid, 'trips', tripId);
+
+export type TripPantryChange =
+  | { kind: 'increase'; item: Pick<PantryItem, 'id' | 'quantity' | 'unit' | 'lastPurchasedAt'>; to: { amount: number; unit: CanonicalUnit } }
+  | { kind: 'add'; input: PantryInput };
+
+export async function applyTripPantryChange(
+  uid: string,
+  tripId: string,
+  lineId: string,
+  change: TripPantryChange,
+  ctx: { plan: PlanId; pantryItems: number; now: number; via: 'auto' | 'review' }
+): Promise<PantryAppliedEntry> {
+  const db = requireDb();
+  const batch = writeBatch(db);
+  let entry: PantryAppliedEntry;
+  if (change.kind === 'increase') {
+    if (!(change.to.amount >= 0) || change.to.amount > 100000) throw new DataError('VALIDATION', 'Enter a quantity of 0 or more.', { field: 'quantity' });
+    batch.update(refs.pantryItem(uid, change.item.id), {
+      quantity: change.to.amount,
+      unit: change.to.unit,
+      lastPurchasedAt: Timestamp.fromMillis(ctx.now),
+      updatedAt: serverTimestamp(),
+    });
+    entry = { status: 'applied', via: ctx.via, kind: 'increase', pantryItemId: change.item.id, prevQuantity: change.item.quantity, prevUnit: change.item.unit, prevLastPurchasedAt: change.item.lastPurchasedAt };
+  } else {
+    validate(change.input, false);
+    const limit = canAddPantryItem(ctx.plan, ctx.pantryItems);
+    if (!limit.allowed) throw new DataError('FREE_LIMIT_REACHED', `The Free plan includes up to ${limit.limit} Pantry items.`, { limit: limit.limit, kind: 'pantry' });
+    const itemRef = doc(refs.pantry(uid));
+    const name = cleanDisplayName(change.input.name);
+    batch.set(itemRef, {
+      name,
+      normalizedName: normaliseItemName(name),
+      quantity: change.input.quantity,
+      unit: change.input.unit,
+      minQuantity: change.input.minQuantity ?? 0,
+      category: change.input.category ?? 'other',
+      expiryDate: null,
+      expiryKind: null,
+      lastPurchasedAt: Timestamp.fromMillis(ctx.now),
+      createdAt: serverTimestamp(),
+      updatedAt: serverTimestamp(),
+    });
+    batch.set(refs.counters(uid), { pantryItems: increment(1), lastOp: { type: 'pantryAdd', id: itemRef.id }, updatedAt: serverTimestamp() }, { merge: true });
+    entry = { status: 'applied', via: ctx.via, kind: 'add', pantryItemId: itemRef.id };
   }
+  batch.update(tripRef(uid, tripId), { [`pantryApplied.${lineId}`]: entry });
+  await commitBatch(batch);
+  return entry;
 }
 
-export const DAY_MS = 24 * 60 * 60 * 1000;
-
-/** Pantry signals for Home and Pantry screens (Figma P01 "Today's Signals", P10 sections). */
-export function pantrySignals(items: PantryItem[], now: number) {
-  const startToday = new Date(now);
-  startToday.setHours(0, 0, 0, 0);
-  const t0 = startToday.getTime();
-  const runningLow = items.filter((i) => i.minQuantity > 0 && i.quantity <= i.minQuantity);
-  const expired = items.filter((i) => i.expiryDate != null && i.expiryDate < t0);
-  const useSoon = items
-    .filter((i) => i.expiryDate != null && i.expiryDate >= t0 && i.expiryDate < t0 + 4 * DAY_MS)
-    .sort((a, b) => (a.expiryDate ?? 0) - (b.expiryDate ?? 0));
-  const recentlyAdded = items
-    .filter((i) => (i.lastPurchasedAt ?? i.createdAt ?? 0) >= now - 7 * DAY_MS)
-    .sort((a, b) => (b.lastPurchasedAt ?? b.createdAt ?? 0) - (a.lastPurchasedAt ?? a.createdAt ?? 0));
-  return { runningLow, useSoon, expired, recentlyAdded };
+/** Reverts an applied change: restores the previous quantity, or removes an added item. */
+export async function undoTripPantryChange(uid: string, tripId: string, lineId: string, entry: PantryAppliedEntry): Promise<void> {
+  if (entry.status !== 'applied') return;
+  const batch = writeBatch(requireDb());
+  if (entry.kind === 'increase') {
+    batch.update(refs.pantryItem(uid, entry.pantryItemId), {
+      quantity: entry.prevQuantity,
+      unit: entry.prevUnit,
+      lastPurchasedAt: entry.prevLastPurchasedAt == null ? null : Timestamp.fromMillis(entry.prevLastPurchasedAt),
+      updatedAt: serverTimestamp(),
+    });
+  } else {
+    batch.delete(refs.pantryItem(uid, entry.pantryItemId));
+    batch.set(refs.counters(uid), { pantryItems: increment(-1), lastOp: { type: 'pantryRemove', id: entry.pantryItemId }, updatedAt: serverTimestamp() }, { merge: true });
+  }
+  batch.update(tripRef(uid, tripId), { [`pantryApplied.${lineId}`]: { status: 'undone' } });
+  await commitBatch(batch);
 }
 
-export function daysUntil(expiry: number, now: number): number {
-  const a = new Date(now);
-  a.setHours(0, 0, 0, 0);
-  const b = new Date(expiry);
-  b.setHours(0, 0, 0, 0);
-  return Math.round((b.getTime() - a.getTime()) / DAY_MS);
+/** Records that the user chose not to add a reviewed line to the Pantry. Changes no Pantry data. */
+export async function dismissTripPantryLine(uid: string, tripId: string, lineId: string): Promise<void> {
+  const batch = writeBatch(requireDb());
+  batch.update(tripRef(uid, tripId), { [`pantryApplied.${lineId}`]: { status: 'dismissed' } });
+  await commitBatch(batch);
 }

@@ -17,7 +17,7 @@ import type { PlanId } from '@/shared/entitlements/plans';
 export type PlanOffer = {
   plan: Exclude<PlanId, 'free'>;
   productId: string;
-  /** Localised price string from StoreKit, e.g. "£6.99". Never hard-coded. */
+  /** Localised price string from StoreKit (currency symbol and amount). Never hard-coded. */
   priceString: string;
   period: 'month';
 };

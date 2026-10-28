@@ -1,0 +1,223 @@
+# Package C — full jest suite on the LOCAL PROXY toolchain (archived Expo SDK 53: jest 29, RNTL shim). NOT acceptance evidence; CI (SDK 58, jest 30, RNTL 14) is authoritative.
+# 2026-10-28T18:23:33Z
+FAIL __tests__/navigation.test.tsx
+    ✓ lands on Welcome and cannot open the signed-in area (180 ms)
+    ✕ sees exactly the Home, Lists and Pantry tabs (304 ms)
+    ✕ switches tabs from the bottom navigation (84 ms)
+    ✓ opens Profile contextually without adding a tab (96 ms)
+    ✓ returns to the public area after signing out (77 ms)
+  ● signed-in user › sees exactly the Home, Lists and Pantry tabs
+  ● signed-in user › switches tabs from the bottom navigation
+PASS __tests__/ui/screens.test.tsx
+    ✓ shows an empty state without lists and a pantry hint without signals (51 ms)
+    ✓ shows the active list, Pantry signals and Resume Shopping from real data (14 ms)
+    ✓ creates a list and enforces the Free limit of 2 active lists (105 ms)
+    ✓ shows the user-price estimate, items already in the Pantry, and starts a shopping trip (36 ms)
+    ✓ ticks an item and edits it through the item editor (81 ms)
+    ✓ adds a custom item and suggests items that ran out in the Pantry (26 ms)
+    ✓ is an honest unavailable state that changes nothing and sells nothing (5 ms)
+    ✓ records collected and unavailable items and keeps the list in sync (47 ms)
+    ✓ finishes with a user-entered total, then applies only additive Pantry updates (undoable) (67 ms)
+    ✓ groups items into the Figma sections and adds an item with a use-by date (74 ms)
+    ✓ never shows a hard-coded price and says purchases are unavailable (14 ms)
+    ✓ collects only name, email and password and requires accepting the Terms (31 ms)
+    ✓ asks for permission first and sends nothing without it (20 ms)
+    ✓ shows the server reason when AI is paused; never a fallback recipe (15 ms)
+    ✓ turns AI suggestions off through the server and links to deletion (30 ms)
+    ✓ deletes the account only after confirmation and re-authentication (21 ms)
+PASS __tests__/functions/account.test.ts
+    ✓ requires explicit confirmation and a recent sign-in (4 ms)
+    ✓ deletes all of the user’s data, files, subscription record and sign-in account; keeps others (3 ms)
+    ✓ is idempotent (retry after a partial failure succeeds) (16 ms)
+    ✓ exports everything stored about the user (including legacy fields) and nothing about others (2 ms)
+    ✓ records AI consent and withdrawal with versions and timestamps (2 ms)
+    ✓ stores preferences only with explicit consent; withdrawal deletes them (1 ms)
+    ✓ rejects unknown allergen or diet codes and oversized input (1 ms)
+PASS __tests__/functions/generateRecipes.test.ts
+    ✓ Scenario: pantry mode returns reclassified recipes and consumes exactly one introductory credit (13 ms)
+    ✓ identical request within the cache window returns the same result without using a credit (4 ms)
+    ✓ both mode merges pantry and list; list ingredients are classified fromList (3 ms)
+    ✓ requires AI consent before anything is sent (Apple 5.1.2(i)) (1 ms)
+    ✓ NO_INGREDIENTS is checked before any reservation (1 ms)
+    ✓ provider timeout → PROVIDER_UNAVAILABLE, credit and reservation released (1 ms)
+    ✓ invalid output (an invented price field) → INVALID_OUTPUT; never shown, nothing charged (2 ms)
+    ✓ all recipes conflict with a consented allergy → ALL_DISCARDED; nothing charged (2 ms)
+    ✓ partially unsafe output: unsafe recipe removed, safe one shown and counted (4 ms)
+    ✓ FT-08: preferences without consent are not applied and the response says so (UI-3) (2 ms)
+    ✓ Free: three successful generations, then TRIAL_EXHAUSTED (6 ms)
+    ✓ introductory credits need a verified email (1 ms)
+    ✓ Premium uses its quota, not introductory credits (2 ms)
+    ✓ global pause and monthly spend cap stop requests before the provider is called (1 ms)
+    ✓ records estimated spend and logs no ingredient names, allergies or recipe text (3 ms)
+    ✓ rejects malformed requests (1 ms)
+PASS __tests__/security.static.test.ts
+    ✓ is non-empty (sanity check for the scanner) (1 ms)
+    ✓ does not import AI provider SDKs or axios (4 ms)
+    ✓ only uses allow-listed EXPO_PUBLIC_ variables (3 ms)
+    ✓ contains no Google API key (10 ms)
+    ✓ contains no OpenAI-style key (4 ms)
+    ✓ contains no Anthropic key (4 ms)
+    ✓ contains no Apify token (3 ms)
+    ✓ contains no RapidAPI key (8 ms)
+    ✓ contains no Private key block (3 ms)
+    ✓ contains no hard-coded Firebase project configuration (2 ms)
+    ✓ contains no V1 fabricated-data markers (3 ms)
+    ✓ does not log passwords or form values on sign-in (3 ms)
+    ✓ eas.json defines APP_ENV for every profile and no EXPO_PUBLIC_ values (1 ms)
+    ✓ removed V1 client-side AI, price and mock modules stay removed (1 ms)
+PASS __tests__/ui/components.test.tsx
+    ✓ fires onPress and exposes role and label (43 ms)
+    ✓ does not fire when disabled or loading and reports the state (4 ms)
+    ✓ uses the Figma colours for primary, secondary and destructive (3 ms)
+    ✓ badges and alerts carry text (2 ms)
+    ✓ progress exposes its value to assistive technology (1 ms)
+    ✓ separates the checkbox from the edit action (3 ms)
+    ✓ shows "Done" when checked (2 ms)
+    ✓ shows exception actions when expanded and labels them for VoiceOver (4 ms)
+    ✓ offers the exceptions as an accessibility action (no long-press needed) (2 ms)
+    ✓ states the outcome in text (2 ms)
+    ✓ shows the error message and announces it in the hint (8 ms)
+PASS __tests__/auth.context.test.tsx
+  ✓ stays initialising until Firebase reports the first auth state (22 ms)
+  ✓ unsubscribes from auth state changes on unmount (1 ms)
+  ✓ reports a profile update failure instead of throwing (25 ms)
+  ✓ removes data V1 left on the device (UID under "userToken" and persisted error messages) (1 ms)
+PASS __tests__/functions/entitlements-provider.test.ts
+    ✓ maps active, cancelled-but-active, grace, billing retry, expired and refunded (3 ms)
+    ✓ ignores unknown products and non-App Store purchases (1 ms)
+    ✓ writes the plan from the REST API and never touches AI credits (2 ms)
+    ✓ webhook requires the shared authorisation value (constant-time compare) (2 ms)
+    ✓ sends a forced tool call and returns the tool input with usage (1 ms)
+    ✓ maps errors: missing key, 429, 5xx, refusal, truncation, no tool block (2 ms)
+    ✓ times out with AbortController (21 ms)
+PASS __tests__/ui/v2-compliance.test.ts
+    ✓ uses only approved token colours outside the token file (3 ms)
+    ✓ does not use icon fonts (icons come from the Figma components) (2 ms)
+    ✓ has exactly three permanent tabs: Home | Lists | Pantry (1 ms)
+    ✓ keeps V1 screens, contexts and components removed
+    ✓ contains no hard-coded prices in UI code (prices come from the user or from Apple) — LS-03 (2 ms)
+    ✓ does not ask for phone numbers or addresses at registration
+PASS __tests__/shared/entitlements-usage.test.ts
+    ✓ Free: 2 lists, 20 items per list, 30 pantry items (2 ms)
+    ✓ Standard and Premium have no list or pantry limits
+    ✓ downgrade never deletes data: over-limit is reported for new additions only
+    ✓ Free: AI recipes only with verified email and remaining introductory credits (1 ms)
+    ✓ Standard: no ongoing AI, but keeps unused introductory credits (D10)
+    ✓ Premium: AI by plan; supermarket lookups only when a licensed provider is live
+    ✓ shopping history is hidden on Free (D11) and visible on paid plans
+    ✓ premium beats standard; grace period keeps access; expiry and refund drop to free (2 ms)
+    ✓ store snapshots never grant or replenish introductory credits (E2–E13)
+    ✓ Free: 3 successful generations, failures are free, then TRIAL_EXHAUSTED
+    ✓ blocks parallel requests (race-safe) until the reservation ends or goes stale
+    ✓ requires a verified email for introductory credits
+    ✓ Premium: hourly and monthly quotas with reset times; does not use introductory credits (1 ms)
+PASS __tests__/shared/ai-recipes.test.ts
+    ✓ accepts a valid result (1 ms)
+    ✓ FT-07: rejects price, availability and other invented fields anywhere (2 ms)
+    ✓ FT-07: rejects nutrition unless nutrition estimates are enabled (FS-D1) (1 ms)
+    ✓ enforces ranges, lengths, step order and reference format (1 ms)
+    ✓ provider JSON schema forbids additional properties and omits nutrition unless enabled (1 ms)
+    ✓ pantry mode excludes expired "use by" items and non-food items (1 ms)
+    ✓ list mode uses only the list (1 ms)
+    ✓ both mode merges the same ingredient from pantry and list
+    ✓ NO_INGREDIENTS when nothing usable (checked before any credit is reserved) (1 ms)
+    ✓ bounds the prompt and keeps soon-expiring items (3 ms)
+    ✓ cache key is stable regardless of input order and changes with constraints (1 ms)
+    ✓ available, fromList, partial with shortfall, and missing (1 ms)
+    ✓ partial when pantry and list together do not cover the need
+    ✓ name matching avoids short-substring false positives (1 ms)
+PASS __tests__/shared/food-safety.test.ts
+    ✓ covers exactly the 14 UK regulated allergens with FSA labels (4 ms)
+    ✓ applies exceptions before matching (5 ms)
+    ✓ FT-01: peanut allergy + "peanut butter" → recipe discarded, never displayed (1 ms)
+    ✓ FT-02: milk allergy + "ghee" (derivative) → hard conflict (1 ms)
+    ✓ FT-03: gluten allergy + "soy sauce" → shown with a "check" badge and warning (2 ms)
+    ✓ FT-04: title "Allergen-free brownies" → discarded
+    ✓ FT-05: model claims "vegan" but uses honey → tag removed (recipe still shown when vegan not selected) (3 ms)
+    ✓ FT-05b: vegan selected + honey → discarded (1 ms)
+    ✓ FT-06: method mentions prawns that are missing from the ingredient list → contradiction (1 ms)
+    ✓ FT-06b: cooking verbs in the method do not cause false contradictions ("roll out", "cream the sugar") (2 ms)
+    ✓ free-from and safety claims are removed from free text (1 ms)
+    ✓ avoid list (free text) discards matching recipes
+    ✓ without consent, saved preferences are ignored (informational warnings only) (1 ms)
+    ✓ halal and kosher always add a certification check; pork is a conflict (2 ms)
+    ✓ vegetarian: meat-free alternatives are not conflicts (3 ms)
+    ✓ product qualifiers cover the rest of the name; words before them still count (1 ms)
+    ✓ descriptive modifiers only cover the next word (9 ms)
+    ✓ method text: "vegan butter" is removed but later allergen words still count
+PASS __tests__/data/repositories.test.ts
+    ✓ creates, renames, archives, unarchives and deletes lists with matching counters (6 ms)
+    ✓ enforces the Free list limit before writing and validates names (6 ms)
+    ✓ adds, updates, ticks, prices and removes items; list itemCount tracks adds and removals (2 ms)
+    ✓ rejects invalid input and the 21st Free item (2 ms)
+    ✓ maps write failures to a friendly offline error and applies nothing (atomic batch) (1 ms)
+    ✓ adds, updates (including run-out and expiry) and removes with counters (3 ms)
+    ✓ enforces the Free pantry limit
+    ✓ computes Running Low, Use Soon, expired and Recently Added signals (1 ms)
+    ✓ starts a trip, records outcomes (ticking the list item), and finishes with a user-entered total (3 ms)
+PASS __tests__/shared/pantry-legal.test.ts
+    ✓ auto-updates only unambiguous, comparable matches; never decreases or deletes (3 ms)
+    ✓ parses front matter, headings, tables, nested lists and blockquotes (4 ms)
+    ✓ escapes HTML and only renders safe links (2 ms)
+    ✓ finds publication-blocking markers with line numbers (1 ms)
+PASS __tests__/theme.tokens.test.ts
+    ✓ action/primary matches the approved handoff value (1 ms)
+    ✓ action/pressed matches the approved handoff value
+    ✓ action/subtle matches the approved handoff value
+    ✓ intelligence/base matches the approved handoff value
+    ✓ intelligence/subtle matches the approved handoff value
+    ✓ brand/accent matches the approved handoff value
+    ✓ brand/subtle matches the approved handoff value
+    ✓ content/primary matches the approved handoff value
+    ✓ content/secondary matches the approved handoff value (1 ms)
+    ✓ content/muted matches the approved handoff value
+    ✓ border/default matches the approved handoff value
+    ✓ surface/canvas matches the approved handoff value (1 ms)
+    ✓ surface/card matches the approved handoff value
+    ✓ status/success matches the approved handoff value
+    ✓ status/warning matches the approved handoff value
+    ✓ status/error matches the approved handoff value
+    ✓ status/information matches the approved handoff value
+    ✓ covers every colour in the handoff file
+    ✓ includes the six Figma colour tokens missing from the handoff file (1 ms)
+    ✓ defines exactly 23 colour tokens, as in Figma
+    ✓ match Figma (18 values)
+    ✓ defines the 10 approved Inter text styles (1 ms)
+    ✓ display is Inter_700Bold 32/40
+    ✓ h1 is Inter_700Bold 28/34
+    ✓ h2 is Inter_700Bold 22/28
+    ✓ h3 is Inter_600SemiBold 18/24 (1 ms)
+    ✓ body is Inter_400Regular 16/24
+    ✓ bodySmall is Inter_400Regular 14/20
+    ✓ label is Inter_600SemiBold 14/20
+    ✓ caption is Inter_500Medium 12/16 (1 ms)
+    ✓ button is Inter_600SemiBold 15/20
+    ✓ dataLarge is Inter_700Bold 24/30
+PASS __tests__/shared/units-items.test.ts
+    ✓ normalises aliases and refuses to guess unknown units (1 ms)
+    ✓ converts within a family only (1 ms)
+    ✓ adds quantities in the first unit and avoids floating-point noise
+    ✓ reports coverage and shortfall in the needed unit (1 ms)
+    ✓ validates quantities (1 ms)
+    ✓ formats quantities for display (1 ms)
+    ✓ normalises names for matching (case, accents, punctuation, plurals) (4 ms)
+    ✓ maps legacy V1 categories (1 ms)
+    ✓ validates names
+    ✓ parses user-entered prices to integer pence and never accepts junk (1 ms)
+PASS __tests__/ui/presenters.test.ts
+    ✓ uses the time of day and the first name (1 ms)
+    ✓ is absent without prices and labelled partial when some items have none (1 ms)
+    ✓ labels the per-item badge as the user’s own price
+    ✓ orders urgency: past use-by, expiring, out, running low, recently added, in stock (1 ms)
+    ✓ describes quantity and date kind (1 ms)
+    ✓ lists expired use-by first, then use-soon, then running low; max 3
+    ✓ finds list items already stocked in the Pantry (quantity above zero) (1 ms)
+    ✓ groups by category in the given order
+    ✓ speaks units in full
+    ✓ parses quantities (comma decimals; zero only when allowed) (1 ms)
+    ✓ parses and formats UK dates; rejects impossible dates (1 ms)
+    ✓ validates sign-up input
+Test Suites: 1 failed, 16 passed, 17 total
+Tests:       2 failed, 196 passed, 198 total
+
+# NOTE: the 2 failures in navigation.test.tsx are known limitations of the local RNTL shim (no host 'parent' semantics; no expo-router toHavePathname matcher). Their result under real RNTL 14 / expo-router is NOT TESTED until CI runs.

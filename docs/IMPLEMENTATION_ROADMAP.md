@@ -22,6 +22,10 @@ Each milestone ends with: CI green (typecheck, lint, unit/integration tests, sec
 
 Visual reskin (green/cream concept) is tracked separately as a proposal and is not part of these milestones unless approved.
 
+### 1.1 Status on 28 October 2026 (after the accelerated packages)
+
+Code exists for most of M2–M6 on `feature/v2-production-rebuild`, tested only on the local proxy toolchain; **no milestone is PASS** because nothing has run in CI, on an emulator or on a device. Per-item status: `IMPLEMENTATION_PACKAGE_REPORT.md` §1 (M2 data/rules/functions, M3 recipe pipeline paused, M4/M5 screens, M6 interfaces without purchases). M7 (P04–P06) is not implemented. M1 remains open until CI runs.
+
 ## 2. First milestone — M1 detail
 
 ### 2.1 Steps

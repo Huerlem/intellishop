@@ -85,9 +85,10 @@ export default function ProfileScreen() {
       <RowGroup>
         <SettingsRow title="Name" detail={auth.getDisplayName() || 'Not set'} onPress={() => { setName(auth.getDisplayName()); setEditingName(true); }} trailing={<AppText variant="caption" tone="action">Edit</AppText>} />
         <SettingsRow title="Email" detail={`${auth.getEmail()}${auth.emailVerified ? ' · Verified' : ' · Not verified'}`} trailing={!auth.emailVerified ? <Button title="I've verified" variant="tertiary" compact onPress={() => run('refresh', async () => { await auth.refreshUser(); })} /> : undefined} />
+        <SettingsRow title="Delete account" destructive onPress={() => router.push(ROUTES.deleteAccount)} testID="delete-account" />
       </RowGroup>
 
-      <SectionHeader title="Plan" />
+      <SectionHeader title="Subscription" />
       <RowGroup>
         <SettingsRow title={`${PLAN_NAMES[plan.plan]} plan`} detail={planDetail} onPress={() => router.push(ROUTES.plans)} trailing={<AppText variant="caption" tone="action">Plans</AppText>} testID="plan-row" />
         <SettingsRow title="Restore purchases" onPress={() => run('restore', async () => { const r = await getSubscriptionService().restore(); setNotice(r.status === 'restored' ? { tone: 'success', title: 'Purchases restored' } : r.status === 'nothing_to_restore' ? { tone: 'info', title: 'No purchases to restore' } : { tone: 'info', title: 'Restore is not available', detail: r.message }); })} />
@@ -118,6 +119,7 @@ export default function ProfileScreen() {
       <SectionHeader title="Help" />
       <RowGroup>
         <SettingsRow title="Help, feedback & complaints" onPress={() => router.push(routeTo.legal('support'))} />
+        <SettingsRow title="Privacy request or complaint" detail="Ask for a copy, correction or deletion, or complain about how we use your data" onPress={() => router.push(routeTo.legal('support'))} />
       </RowGroup>
 
       <SectionHeader title="Legal & Privacy" />
@@ -129,7 +131,6 @@ export default function ProfileScreen() {
 
       <View style={{ gap: 8, marginTop: 8 }}>
         <Button title="Sign out" variant="secondary" loading={busy === 'logout'} onPress={() => run('logout', async () => { await getSubscriptionService().reset(); await auth.logout(); })} testID="sign-out" />
-        <Button title="Delete account" variant="tertiary" onPress={() => router.push(ROUTES.deleteAccount)} testID="delete-account" />
       </View>
       <AppText variant="caption" tone="muted" style={{ textAlign: 'center' }}>
         IntelliShop {Constants.expoConfig?.version ?? ''}

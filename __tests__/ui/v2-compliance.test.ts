@@ -68,6 +68,11 @@ describe('V2 design system compliance', () => {
     expect(removed.filter((f) => fs.existsSync(path.join(ROOT, f)))).toEqual([]);
   });
 
+  it('contains no hard-coded prices in UI code (prices come from the user or from Apple) — LS-03', () => {
+    const offenders = files.filter((f) => /£\s?\d/.test(read(f)));
+    expect(offenders).toEqual([]);
+  });
+
   it('does not ask for phone numbers or addresses at registration', () => {
     const src = read(path.join('src', 'screens', 'auth', 'AuthScreens.tsx'));
     expect(src).not.toMatch(/phoneNumber|postcode|street|textContentType="(telephoneNumber|fullStreetAddress|postalCode)"/);

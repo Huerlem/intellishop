@@ -1,0 +1,11 @@
+# gitleaks 8.30.1 — working tree
+[90m6:23PM[0m [32mINF[0m [1mscanned ~1565270 bytes (1.57 MB) in 199ms[0m
+[90m6:23PM[0m [32mINF[0m [1mno leaks found[0m
+exit 0
+# gitleaks — git history (all commits on the branch)
+[90m6:23PM[0m [32mINF[0m [1m19 commits scanned.[0m
+[90m6:23PM[0m [32mINF[0m [1mscanned ~3326728 bytes (3.33 MB) in 1.11s[0m
+[90m6:23PM[0m [32mINF[0m [1mno leaks found[0m
+exit 0
+# actionlint 1.7.12
+exit 0

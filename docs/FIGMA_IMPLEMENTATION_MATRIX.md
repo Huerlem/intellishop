@@ -3,6 +3,8 @@
 Figma file: `VZj2AU8kOJqYvyjp8AvWQa` (IntelliShop — Product Redesign 2026) · Code baseline: `main` @ `0e26321` · Audited 2026-10-27
 Method: Figma read via the Figma MCP (plugin API, **read-only**; no edits made to the file) and static inspection of the repository. Figma frame exports to disk were **BLOCKED** (environment proxy returned HTTP 403 for `figma.com` asset URLs); screens were inspected inline instead.
 
+> **Update 2026-10-28 (Package C):** sections 2–8 below are the **baseline audit of V1** and are kept for history. The current implementation status is **§10**, which supersedes the "Existing code" and "Classification" columns above.
+
 Classification: **Compliant** = implemented and compliant · **Modify** = implemented but requiring modification · **Missing** · **Clarify** = design clarification required.
 
 ## 1. Sources verified
@@ -183,3 +185,78 @@ None of these exist in Figma V2 or in code. They must extend the approved Indigo
 ## 9. Visual direction (concept 07/08)
 
 The concept boards are inspiration for food imagery and icon friendliness only (README priority 3). They are **not** applied in this matrix. A separate comparison/migration proposal (green/cream reskin vs approved indigo/cyan/violet) is a later deliverable and will not be presented as approved. Current instruction: implement the approved indigo/cyan/violet system. Note the concept screens show live-looking retailer prices and logos (Tesco, Sainsbury's, ASDA, Morrisons, Ocado); these must not appear in the product without licensed data and trademark clearance.
+
+
+## 10. Implementation status after Package C (branch `feature/v2-production-rebuild`, 2026-10-28)
+
+Evidence: source in `src/ui`, `src/screens`, `src/features`, `app/`; automated tests in `__tests__/ui`; react-native-web proxy renders in `docs/validation/ui-preview/` (see its README — not iOS screenshots). **No iOS simulator or device run has been possible in this environment**, so every row is at most "Implemented" — visual and interaction acceptance on iOS is **NOT TESTED**.
+
+Classification here: **Compliant** = implemented following the Figma spec with no known deviation · **Modify** = implemented with a documented deviation or open item · **Missing** · **Clarify** = needs a design or owner decision.
+
+### 10.1 Screens
+
+| ID | Screen | Code | Status | Notes / deviations |
+|---|---|---|---|---|
+| P01 | Home `136:3` | `src/screens/HomeScreen.tsx` | Compliant | Greeting + avatar → Profile; Resume Shopping card with progress from the active trip; active list card; Today's Signals derived only from the user's Pantry; Create new list. Extra: "Pantry update waiting" card for finished trips with undecided items (supports P09 "handle later") |
+| P02 | List Detail `136:55` | `src/screens/ListDetailScreen.tsx` | Modify | Estimate uses only prices the user typed (badge "Your price £x", caption explains); "N items already in your Pantry". **Budget line not shown**: no budget field exists in the data model yet (owner decision UI-B1). Figma "Confirmed/Estimated" price badges replaced by "Your price" (no price source — D8) |
+| P03 | Add Items `136:137` | `src/screens/AddItemsScreen.tsx` | Modify | Search, "From your Pantry" suggestions (run out / running low) with rationale badges, results with "Already in Pantry" / "Already on list", custom item; duplicates merge quantities. **Scan omitted** (C10, out of scope). "Recent & Frequent" needs purchase history (Standard+ feature, not built) — suggestions come from the Pantry instead |
+| P04 | Optimisation Review `136:185` | `src/screens/OptimiseScreen.tsx` | Missing (honest placeholder) | Server optimisation endpoint not built; screen says so, changes nothing and does not sell the feature. Recommendation Card component not built |
+| P05 | Recommended Store `136:249` | — | Missing + Clarify (C3) | Requires a licensed multi-retailer price source (none verified). Not reachable from the UI |
+| P06 | Compare Stores `136:305` | — | Missing + Clarify (C3) | As P05 |
+| P07 | Shopping Mode `136:346` | `src/screens/ShoppingModeScreen.tsx` | Modify | Full-screen modal (not a tab); progress; items grouped by **category** (no aisle data — C4); tap to collect, long-press or VoiceOver action for Substitute / Unavailable / Qty; Finish Shopping. Header shows the list name (no store is chosen without P05). Cancel trip in "•••" |
+| P08 | Finish Shopping `136:397` | `src/screens/FinishShoppingScreen.tsx` | Compliant | Purchased / Substituted / Unavailable, estimate from user prices, optional actual total entered at checkout, Needs Your Attention for unmarked items |
+| P09 | Pantry Update `136:425` | `src/screens/PantryUpdateScreen.tsx` | Compliant | High-confidence matches applied automatically (additive only), each recorded on the trip and undoable; ambiguous items in Needs Review with Add to existing / Add as new / Don't add; nothing silently discarded |
+| P10 | Pantry `136:470` | `src/screens/PantryScreen.tsx` | Modify | Search, Running Low, Use Soon, Recently Added, Use What I Have → Browse Recipes, All Items. Added **"Past Their Date"** section above Running Low when items are past their date (never hidden — clarification C7-a) |
+| C1 | Welcome / Sign in / Register / Reset | `src/screens/auth/AuthScreens.tsx` | Modify | Rebuilt with V2 components. Register collects **name, email, password** + explicit Terms checkbox; Privacy Policy readable before sign-up. Uses the existing `logo-100.png` (V1 asset) — brand asset needs owner approval (UI-B2) |
+| C2 | Profile & Settings | `src/screens/ProfileScreen.tsx` (+ AI consent, Allergies & diets, Delete account, Plans) | Clarify | No Figma design exists; built only from approved components. Needs design review |
+| C3 | Store screens without data | — | Clarify | See P05/P06 |
+| C5 | Recipes | `src/screens/RecipesScreen.tsx`, `src/features/recipes/RecipeCard.tsx` | Clarify | Mode (Pantry / list / both), servings, preferences toggle, server generation with typed errors, saved recipes, "Add missing to list" with user selection. No Figma design |
+| C6 | Lists tab root, create/rename/archive/delete | `src/screens/ListsScreen.tsx`, `src/features/lists/ListSheets.tsx` | Clarify | Built from components; bottom sheets use the Elevation/Overlay token |
+| C7 | Pantry All Items, add/edit with expiry | `src/screens/PantryAllScreen.tsx`, `src/features/pantry/PantryItemEditor.tsx` | Clarify | Explicit "Use by" vs "Best before" with explanatory text; quick dates + DD/MM/YYYY entry (no native date picker installed) |
+| C8 | Shopping Mode exception detail | sheets in `ShoppingModeScreen.tsx` | Clarify | Substitute name / quantity bought |
+| C9 | Empty, loading, error, offline | `src/ui/states.tsx`, `src/features/DataStatusBanner.tsx` | Modify | All data screens. Offline copy is honest about the JS SDK memory cache (queued changes survive only while the app is open) |
+| C10 | Scan | — | Deferred | Out of approved scope |
+| — | Legal documents in app | `src/screens/LegalDocumentScreen.tsx`, `src/components/legal/LegalMarkdown.tsx` | Implemented | Same Markdown and parser as the website; drafts carry a "Draft — not yet in force" banner |
+| — | Terms re-acceptance | `TermsUpdateScreen` + guard in `app/(app)/_layout.tsx` | Implemented | Users without the current Terms version see only this screen |
+
+### 10.2 Components (page 13)
+
+| Figma component | Code | Status | Notes |
+|---|---|---|---|
+| Button `100:56` | `src/ui/Button.tsx` | Compliant | 4 variants; Default/Pressed/Disabled/Loading. **Focused** state not rendered (no keyboard focus ring on iOS touch; revisit for iPad keyboard) |
+| Input `100:89` | `src/ui/TextField.tsx` | Compliant | Default/Focused (2 px)/Error/Disabled + search variant |
+| Bottom Nav `100:137` | `src/navigation/TabsLayout.tsx` | Modify | Figma icons and colours on the standard tab bar (keeps VoiceOver "tab, n of 3"). Height follows the platform tab bar rather than a fixed 72 pt — verify on device |
+| List Item `100:167` | `ListItemRow` in `src/ui/rows.tsx` | Compliant | Checkbox and edit are separate accessible controls |
+| Badge `100:186` | `src/ui/Badge.tsx` | Compliant | + Error tone (used by Pantry Item "Out") |
+| Alert `100:219` | `src/ui/Alert.tsx` | Compliant | Announces warnings/errors |
+| Progress `100:236` | `src/ui/ProgressBar.tsx` | Modify | Track uses `border/default` at full opacity (component shows 8 % opacity; screen P01 shows a visible track). Clarify T4 |
+| Avatar `100:250` | `Avatar` in `src/ui/controls.tsx` | Modify | Default only; Notification variant not used |
+| Shopping Mode Item `102:29` | `ShoppingModeItem` in `src/ui/rows.tsx` | Compliant | Pending/Collected/Exception + Substituted/Unavailable outcome badges |
+| Recommendation Card `102:146` | — | Missing | Needed for P04 |
+| Info Card `102:164` | `InfoCard` in `src/ui/Card.tsx` | Compliant | Default / WithIcon |
+| Store Decision `102:193` | — | Missing | Needs P05 data |
+| Store Comparison `102:218` | — | Missing | Needs P06 data |
+| Pantry Item `102:257` | `PantryItemRow` in `src/ui/rows.tsx` | Compliant | Status text from `pantryStatus()` |
+
+### 10.3 Design clarifications raised by implementation
+
+| # | Item | What the code does now | Decision needed |
+|---|---|---|---|
+| D-ICON-1 | The exported Figma geometry of the Home roof, Back arrow and checkbox tick has disconnected strokes (rendered exports in `assets/figma/`) | Draws the evident intent (closed roof, converging arrow, tick) | Designer to confirm or fix the Figma glyphs |
+| A11Y-1 | Unchecked checkbox and card borders use `border/default` #CBD5E1 on white (≈1.5:1, below WCAG 1.4.11's 3:1 for component boundaries) | Follows Figma; checked state and "Done" text also convey state | Consider `content/muted` for checkbox outlines |
+| T4 | Progress track opacity (8 % in component vs visible track on P01) | Full-opacity track | Confirm |
+| UI-B1 | Budget on P02 | Not shown (no data field) | Add a per-list budget field? |
+| UI-B2 | Brand logo on Welcome | Existing V1 `logo-100.png` | Provide approved V2 logo / app icon |
+| UI-B3 | Shopping Mode header without a chosen store | Shows the list name | Confirm until P05 exists |
+| UI-B4 | Profile, Recipes, Lists root, editors, paywall have no Figma frames | Built from approved components and tokens only | Design review |
+
+### 10.4 Flows
+
+| Flow | Status |
+|---|---|
+| Home → List Detail → Add Items → Start Shopping → Shopping Mode → Finish → Pantry Update → Pantry | Implemented; covered end-to-end by `__tests__/ui/screens.test.tsx` over the in-memory database (not on device) |
+| List Detail → Optimise | Honest unavailable state |
+| Recommended Store / Compare Stores | Missing (no licensed data) |
+| Home avatar → Profile → Plans / AI consent / Allergies & diets / Delete account / Legal | Implemented |
+| Pantry → Use What I Have → Recipes | Implemented (server generation is paused by default; see AI status) |
+| Permanent navigation Home ↔ Lists ↔ Pantry | Implemented; `__tests__/navigation.test.tsx` + `__tests__/ui/v2-compliance.test.ts` |

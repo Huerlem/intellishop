@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| Version | 0.1 (draft) |
+| Version | 0.2 (draft) |
 | Date | 28 October 2026 |
 | Links | Matrix IDs from `LEGAL_COMPLIANCE_MATRIX.md`; data IDs from `DATA_FLOW_INVENTORY.md`; food tests from `FOOD_SAFETY_TECHNICAL_SPEC.md` |
 | Rule | A task is ticked only when its **acceptance test** has run and the log is in `docs/validation/`. Text describing a protection does not count. |
@@ -39,6 +39,7 @@ M1 is accepted on its own executable criteria (CI). Legal work runs in parallel 
 | L3-05 | Schema forbids price and availability; nutrition per decision FS-D1 | AI-03 | FT-07 |
 | L3-06 | Full DPIA completed and signed by the owner before the M3 release | DP-18 | Signed DPIA in `docs/compliance/` |
 | L3-07 | Processor terms recorded (provider DPA version, retention, location) | DP-15, AI-04 | Entry in `DATA_FLOW_INVENTORY.md` §1 |
+| L3-08 | **Report** action on every AI result (recipe card): sends the recipe ID, prompt/lexicon versions and the user's reason to support — never to the AI provider — and confirms receipt. Referenced by AI Transparency §9 and Food Safety §8 | AI-02, FS-03 | RNTL: Report visible on each result; payload contains no pantry contents beyond the shown recipe; destination configured |
 
 ## M4 — Legal screens and approved visual integration
 
@@ -56,6 +57,40 @@ M1 is accepted on its own executable criteria (CI). Legal work runs in parallel 
 | LS-02 | Settings → Subscription: current plan, renewal date (from entitlement), **Manage subscription** (`showManageSubscriptions`), refund request route (`beginRefundRequest`) | AP-05, CL-04 | Sandbox device test |
 | LS-03 | No hard-coded prices in code or copy; CI grep for `£` in UI source except the test fixtures | AP-14, CL-05 | CI static check |
 | LS-04 | Subscription-regime readiness review against the made Regulations (if approved) before launch | CL-04 | Legal checklist signed off |
+| LS-05 | **2027 subscription rules** (only if the Consumer Subscription Contracts Regulations are made): pre-contract key information, reminder notices before renewals (including the 6-monthly reminders for monthly contracts), renewal cooling-off, and easy exit — for subscriptions bought through the App Store as well. Server job reads the entitlement renewal dates; reminders by email/in-app | CL-04 | Unit tests on reminder scheduling; dry run with sandbox renewals; legal sign-off |
+| LS-06 | **Cooling-off waiver decision** (Consumer Contracts Regs 2013 reg. 37): either (a) express consent + acknowledgement before the first purchase and a durable-medium confirmation, or (b) no waiver and honour 14-day cancellations through Apple refunds. Owner decides with legal advice; implement the chosen option | CL-03 | RNTL for (a) consent capture + confirmation email test; or documented (b) process |
+
+## Implementation status — 28 October 2026 (Packages B and C)
+
+Statuses follow `LEGAL_RELEASE_GATE.md`: **IMPLEMENTED** = built and tested on the local proxy toolchain only (not CI, emulator or device). Nothing in this list is ticked as PASS yet.
+
+| ID | Status | Evidence |
+|---|---|---|
+| L2-01 | IMPLEMENTED | `src/screens/auth/AuthScreens.tsx` (name, email, password); `firebase/authHelpers.js` writes no phone/address; `__tests__/ui/screens.test.tsx` "C1 registration", `__tests__/ui/v2-compliance.test.ts`. Existing V1 values untouched (owner decision) |
+| L2-02 | IMPLEMENTED | Terms checkbox enforced (submit blocked with a message rather than a disabled button, so the reason is announced); Privacy Policy linked as information; `termsVersion`/`termsAcceptedAt` stored |
+| L2-03 | IMPLEMENTED | `firestore.rules`, `storage.rules`, `rules-tests/*` — emulator run NOT TESTED (CI) |
+| L2-04 | NOT IMPLEMENTED | Migration of V1 top-level data: owner-approved run only, after backup |
+| L2-05 | IMPLEMENTED (M1) | — |
+| L2-06 | IMPLEMENTED | `DeleteAccountScreen` + `functions/src/handlers/account.ts`; handler and screen tests |
+| L2-07 | PARTIAL | Apple subscription notice + Manage link on the deletion screen; RevenueCat deletion hook exists but RevenueCat is not configured |
+| L2-08 | IMPLEMENTED | Profile › Privacy › Download my data → `exportUserData` → share sheet (JSON) |
+| L2-09 | NOT APPLICABLE in V2.0 | Profile photo feature removed from the first release (`expo-image-picker` and its permission removed); Privacy Policy row marked `[PENDING DECISION]` |
+| L2-10 | IMPLEMENTED | `users/{uid}/consents/{ai|dietary}` written by the server with versions |
+| L2-11 | IMPLEMENTED | Profile › Legal & Privacy (in-app documents; hosted URLs BLOCKED by domain) |
+| L2-12 | IMPLEMENTED (entry) | Profile › Help › Privacy request or complaint → Support page; contact email is an owner fact |
+| L3-01 | IMPLEMENTED | `AiConsentScreen` (names provider, what is and is never sent); Settings toggle; server refuses without consent (handler tests) |
+| L3-02 | IMPLEMENTED | Prompt builder sends ingredient data only (`functions/src/handlers/prompt.ts`; tests) |
+| L3-03 | IMPLEMENTED | `DietaryPreferencesScreen`: explicit unticked consent each save; withdrawal deletes |
+| L3-04/05 | IMPLEMENTED | Lexicon, screening, strict schema; recipe card warnings |
+| L3-06/07 | OPEN | Owner |
+| L3-08 | NOT IMPLEMENTED | — |
+| L4-01 | IMPLEMENTED | `LegalDocumentScreen` + `LegalMarkdown` (shared parser) |
+| L4-02 | IMPLEMENTED | Links from registration, AI permission, allergies & diets, deletion, paywall, Profile |
+| L4-03 | IMPLEMENTED | `TermsUpdateScreen` guard in `app/(app)/_layout.tsx` |
+| LS-01 | PARTIAL | Paywall without prices or purchase while StoreKit is not configured; Restore present (reports "not available") |
+| LS-02 | PARTIAL | Manage subscription and Request a refund open Apple's pages; renewal date shown only once entitlements exist |
+| LS-03 | IMPLEMENTED | CI static test: no `£<digits>` literal in UI code |
+| LS-04…06 | OPEN | Owner / legal |
 
 ## Release QA — legal and App Store gate
 

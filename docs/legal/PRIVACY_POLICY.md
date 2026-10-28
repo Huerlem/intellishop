@@ -50,12 +50,12 @@ In this policy, "we", "us" and "our" mean the controller named above. "You" mean
 | Shopping lists: list names, items, quantities, units, categories, notes, whether an item is ticked, and any prices **you** type in | When you use Lists | To use the feature |
 | Pantry items: names, quantities, units, categories, minimum quantities, expiry dates | When you use Pantry | To use the feature |
 | Shopping trips: what you marked as bought, substituted or unavailable, and any total you type in ([PENDING IMPLEMENTATION: Shopping Mode and trip history, milestone M5]) | When you use Shopping Mode | To use the feature |
-| Profile photo | Only if you choose one | No |
+| Profile photo | Only if you choose one | No. [PENDING DECISION: the first V2 release does not offer profile photos — remove this row, or keep it only if the feature is added] |
 | **Allergies and intolerances**, and **dietary preferences** (for example vegetarian or halal) ([PENDING IMPLEMENTATION: L3-03]) | Only if you choose to add them, after a separate permission screen | No |
 | Saved (favourite) recipes ([PENDING IMPLEMENTATION: M3]) | When you save a recipe | No |
 | Messages you send to us | When you contact support or make a complaint | Only if you contact us |
 
-**We do not ask for** your phone number, your home address, your date of birth or payment card details. [PENDING IMPLEMENTATION: removal of phone and address fields from registration, L2-01 — the current development version still asks for them.]
+**We do not ask for** your phone number, your home address, your date of birth or payment card details. [PENDING IMPLEMENTATION: L2-01 — registration now asks only for name, email and password on the development branch; device verification and the handling of phone and address values stored by earlier versions (owner decision) are outstanding.]
 
 ### 3.2 Information collected automatically
 

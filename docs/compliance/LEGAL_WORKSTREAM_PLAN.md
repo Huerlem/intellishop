@@ -3,9 +3,9 @@
 | | |
 |---|---|
 | Requirement | `docs/requirements/LEGAL_PRIVACY_AI_SAFETY_COMPLIANCE_REQUIREMENT.md` (P0) |
-| Version | 0.1 |
+| Version | 0.2 |
 | Date | 28 October 2026 |
-| Status | Compliance foundation written; public documents not yet drafted. **No legal certification is claimed.** |
+| Status | v0.2: all ten public documents drafted (`docs/legal/`, 0.2.0-draft, not published); in-app legal, consent, deletion and export flows implemented on the development branch (Package C). **No legal certification is claimed.** |
 | Language | Public documents in British English. Planning documents in English. |
 
 This plan answers the seven items in requirement §12. Supporting detail:
@@ -26,16 +26,16 @@ This plan answers the seven items in requirement §12. Supporting detail:
 
 | # | File | Purpose | Status | Depends on | Target |
 |---|---|---|---|---|---|
-| A | `docs/legal/PRIVACY_POLICY.md` | UK GDPR Arts. 13–14 notice; Apple 5.1.1(i) | **Not drafted** | Inventory (done, v0.1); owner info §3; processor terms | Draft first (P1) |
-| B | `docs/legal/TERMS_AND_CONDITIONS.md` | Contract; CRA 2015-compliant liability; complaints; governing law | **Not drafted** | Owner info; age decision | P1 |
-| C | `docs/legal/AI_TRANSPARENCY.md` | What the AI does, data sent, limits, controls; Apple 5.1.2(i) disclosure text | **Not drafted** | AI provider contract (name only once contracted) | P2 (with M3) |
-| D | `docs/legal/FOOD_SAFETY_AND_ALLERGENS.md` | Disclaimer that mirrors the enforced spec | **Not drafted** | `FOOD_SAFETY_TECHNICAL_SPEC.md` (done, v0.1); decision FS-D1 | P2 |
-| E | `docs/legal/SUBSCRIPTION_TERMS.md` | Plans, introductory credits, quotas, IAP billing, renewal, cancellation, refunds, statutory rights | **Not drafted** | Final prices and quotas; ASC products; subscription regulations | P3 (draft early with placeholders, finalise at M6) |
-| F | `docs/legal/PRICING_DATA_DISCLAIMER.md` | Honest statement of price-data limits | **Not drafted** | Price-feature scope (decision D8: no live prices) | P1 (short; can be accurate now) |
-| G | `docs/legal/ACCOUNT_DELETION_POLICY.md` | Deletion steps, timescale, retained records, billing notice | **Not drafted** | M2 deletion design (L2-06/07); backup retention decision | P1 (finalise when M2 deletion passes tests) |
-| H | `docs/legal/ACCEPTABLE_USE.md` | Prohibited misuse, automation, limit bypass, attacks | **Not drafted** | — | P1 |
+| A | `docs/legal/PRIVACY_POLICY.md` | UK GDPR Arts. 13–14 notice; Apple 5.1.1(i) | Drafted v0.2 (not published) | Inventory (done, v0.1); owner info §3; processor terms | Draft first (P1) |
+| B | `docs/legal/TERMS_AND_CONDITIONS.md` | Contract; CRA 2015-compliant liability; complaints; governing law | Drafted v0.2 (not published) | Owner info; age decision | P1 |
+| C | `docs/legal/AI_TRANSPARENCY.md` | What the AI does, data sent, limits, controls; Apple 5.1.2(i) disclosure text | Drafted v0.2 (not published) | AI provider contract (name only once contracted) | P2 (with M3) |
+| D | `docs/legal/FOOD_SAFETY_AND_ALLERGENS.md` | Disclaimer that mirrors the enforced spec | Drafted v0.2 (not published) | `FOOD_SAFETY_TECHNICAL_SPEC.md` (done, v0.1); decision FS-D1 | P2 |
+| E | `docs/legal/SUBSCRIPTION_TERMS.md` | Plans, introductory credits, quotas, IAP billing, renewal, cancellation, refunds, statutory rights | Drafted v0.2 (not published) | Final prices and quotas; ASC products; subscription regulations | P3 (draft early with placeholders, finalise at M6) |
+| F | `docs/legal/PRICING_DATA_DISCLAIMER.md` | Honest statement of price-data limits | Drafted v0.2 (not published) | Price-feature scope (decision D8: no live prices) | P1 (short; can be accurate now) |
+| G | `docs/legal/ACCOUNT_DELETION_POLICY.md` | Deletion steps, timescale, retained records, billing notice | Drafted v0.2 (not published) | M2 deletion design (L2-06/07); backup retention decision | P1 (finalise when M2 deletion passes tests) |
+| H | `docs/legal/ACCEPTABLE_USE.md` | Prohibited misuse, automation, limit bypass, attacks | Drafted v0.2 (not published) | — | P1 |
 | — | Cookie notice | **Not required** if the legal site uses no non-essential storage (PE-02). A short "This site uses no cookies" statement goes in the Privacy Policy instead | Assessed | Hosting choice | — |
-| — | Support and complaints page | Support URL for App Store Connect; DPA 2018 s.164A complaints route | **Not drafted** | Owner contact details | P1 |
+| — | Support and complaints page | Support URL for App Store Connect; DPA 2018 s.164A complaints route | Drafted v0.2 (not published) | Owner contact details | P1 |
 | — | `docs/legal/CHANGELOG.md` | Version history of every public document | **Not created** | — | With the first draft |
 | — | **LUFI reference** | Structure only. **The LUFI documents were not available**, so none of their wording was reviewed or reused | Limitation recorded | — | — |
 
@@ -181,3 +181,20 @@ See `LEGAL_RELEASE_GATE.md` §2 (B-L01…B-L16). The ones on the critical path n
 6. **B-L12, B-L13:** prices and products; subscription regulations and trader-role assessment (M6).
 
 Current gate result: **NOT READY — 0 of 10 criteria PASS** (`LEGAL_RELEASE_GATE.md` §1).
+
+
+---
+
+## Progress log
+
+### 28 October 2026 — v0.2 (Legal Workstream V0.2 + Package C)
+
+| Area | Status |
+|---|---|
+| Public documents A–J | Drafted, British English, `0.2.0-draft`, 133 publication markers (`npm run legal:report`); QA register `docs/legal/LEGAL_DOCUMENTS_QA.md` |
+| Corrected conclusions | DPIA (required vs good practice by criteria), subscription regulations (draft, not approved; 1 Jan 2027 if approved), LAW / APPLE / REC split, special-category data in context, consumer-rights sections — matrix C-1…C-5 |
+| Static legal site | Builder + no-cookie template; `--release` fails while markers remain; nothing deployed (owner checkpoint) |
+| In-app | Legal screens from the same Markdown; links at registration, AI permission, allergies & diets, deletion, paywall, Profile; Terms re-acceptance guard |
+| Engineering requirements | L2-01…L2-12, L3-01…L3-05, L4-01…L4-03, LS-03 implemented (proxy-tested only); L3-08, LS-05, LS-06 added; see checklist status table |
+| Gate | `LEGAL_RELEASE_GATE.md` v0.2: NOT READY, 0/10 PASS; new blockers B-L17 (branch not on GitHub → no CI) and B-L18 (trip retention) |
+| Next | Owner facts (B-L01, B-L02, B-L07, B-L08, B-L12, B-L14, B-L18); legal review of Terms §10, Subscription Terms §8–9; CI run; device verification of deletion, consent and export |

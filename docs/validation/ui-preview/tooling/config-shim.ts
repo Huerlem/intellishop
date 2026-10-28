@@ -1,0 +1,9 @@
+export const db = {};
+export const auth = null;
+export const storage = null;
+export const functions = {};
+export const app = null;
+export const isFirebaseConfigured = true;
+export const missingFirebaseConfigKeys: string[] = [];
+export const usingEmulators = false;
+export const FUNCTIONS_REGION = 'europe-west2';

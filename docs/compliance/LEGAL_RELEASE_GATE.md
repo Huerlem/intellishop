@@ -21,7 +21,7 @@
 | G7 | Subscription disclosures match Apple product configuration | **BLOCKED** | Products not configured in App Store Connect; prices provisional (D1); purchases not enabled (paywall shows "not available yet", no hard-coded prices — CI static test LS-03) |
 | G8 | User-facing AI and food-safety warnings | **IMPLEMENTED** | AI permission screen naming the provider and data sent; allergies & diets screen with explicit consent and "not a guarantee" warning; recipe cards show "AI-generated", allergen warnings, per-ingredient checks and a check-before-cooking notice; use-by vs best-before explained in the Pantry editor. AI generation is paused by default (`AI_PAUSED=true`); no end-to-end AI run |
 | G9 | Privacy declarations match the shipped code | **NOT TESTED** | Mapping drafted; no iOS build exists |
-| G10 | Compliance checks with documented evidence | **FAIL** | Many checks now automated (rules tests, handler tests, UI tests, static checks) but **none has run in CI**: the development branch is not on GitHub yet |
+| G10 | Compliance checks with documented evidence | **FAIL** | Many checks now automated (rules tests, handler tests, UI tests, static checks) but **none has run in CI** with the current code: the published branch is behind the local commits and workflow results are not visible here |
 
 ## 2. Blocking issues
 
@@ -43,7 +43,7 @@
 | B-L14 | Minimum age decision and children assessment | Owner | Terms; App Store age rating | Law | Open |
 | B-L15 | Data protection complaints route (DPA 2018 s.164A) | Owner + engineering | Launch | Law | In-app entry **IMPLEMENTED** (Profile › Help › Privacy request or complaint → Support page); destination email is an owner fact |
 | B-L16 | App Privacy answers and privacy manifest checked against the built binary | Engineering (release) | Submission | Apple | Open (no build) |
-| B-L17 | Development branch published to GitHub so CI (lockfile, tests, rules emulator, secret scan) can run | Owner (repository access) | Every "NOT TESTED in CI" item above | Process | **BLOCKED** — this environment has no write access to `Huerlem/intellishop` |
+| B-L17 | Latest development commits on GitHub so CI (lockfile, tests, rules emulator, secret scan) can run | Owner (repository access) | Every "NOT TESTED in CI" item above | Process | Branch published by the owner at `9404c9e`; newer commits **BLOCKED** (no write access from this environment; owner fast-forward via bundle) |
 | B-L18 | Retention period for shopping-trip history (`DATA_FLOW_INVENTORY.md` D13) | Owner | Privacy Policy §9; storage limitation | Law | Open — trips are now stored (needed for Shopping Mode and Pantry Update); no automatic deletion until a period is decided |
 
 ## 3. Non-blocking (track)

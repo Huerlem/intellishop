@@ -13,19 +13,22 @@ Your local `intellishop-new` folder has a different Git history (branch `master`
 # Folder where you saved intellishop-feature-v2.bundle
 cd $HOME\Downloads
 
-# 1) Verify the bundle (must end with "The bundle records a complete history.")
-git bundle verify .\intellishop-feature-v2.bundle
+# 1) Check the file is the one I sent (compare with the SHA-256 in my message / the verify log)
+Get-FileHash .\intellishop-feature-v2.bundle -Algorithm SHA256
 
-# 2) Show the branches inside it
+# 2) Show the branches inside it (main, feature/v2-production-rebuild, wip/unverified-uncommitted-snapshot)
 git bundle list-heads .\intellishop-feature-v2.bundle
 
 # 3) Clone the development branch into a NEW folder
 git clone --branch feature/v2-production-rebuild .\intellishop-feature-v2.bundle C:\dev\intellishop-v2
 cd C:\dev\intellishop-v2
 
-# 4) Check the history: the first line is the latest commit; e7b52ea (M1) and 0e26321 (V1) must appear
-git log --oneline -12
-git merge-base --is-ancestor e7b52ea HEAD; if ($LASTEXITCODE -eq 0) { "e7b52ea is in this branch" } else { "MISSING e7b52ea - stop" }
+# 4) Verify the bundle (needs to run inside a repository; must say "The bundle records a complete history.")
+git bundle verify $HOME\Downloads\intellishop-feature-v2.bundle
+
+# 5) Check the history: e7b52ea (M1) and 0e26321 (V1) must be ancestors of the branch
+git log --oneline -15
+git merge-base --is-ancestor e7b52ea HEAD; if ($LASTEXITCODE -eq 0) { "OK: e7b52ea is in this branch" } else { "MISSING e7b52ea - stop" }
 ```
 
 ### A2. Push only the development branch (PowerShell)

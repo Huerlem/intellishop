@@ -36,6 +36,7 @@ const appRoutes = {
   '(app)/(tabs)/pantry': stubScreen('pantry-screen', 'Pantry screen'),
   '(app)/profile': stubScreen('profile-screen', 'Profile screen'),
   '(public)/_layout': PublicLayoutModule,
+  '(public)/index': stubScreen('welcome-screen', 'Welcome'),
   '(public)/WelcomeScreen': stubScreen('welcome-screen', 'Welcome'),
   '(public)/LoginScreen': stubScreen('login-screen', 'Login'),
   '(public)/RegisterScreen': stubScreen('register-screen', 'Register'),
@@ -87,10 +88,11 @@ describe('signed-in user', () => {
 
     expect(screen.getByTestId('home-screen')).toBeVisible();
 
-    const home = screen.getByLabelText('Home, tab, 1 of 3');
+    expect(screen.getByLabelText('Home, tab, 1 of 3')).toBeTruthy();
     expect(screen.getByLabelText('Lists, tab, 2 of 3')).toBeTruthy();
     expect(screen.getByLabelText('Pantry, tab, 3 of 3')).toBeTruthy();
-    expect(home.parent?.children).toHaveLength(3);
+    // Tab buttons may be nested in separate wrappers; validate the three actual labels.
+    expect(screen.getAllByLabelText(/, tab, [123] of 3$/)).toHaveLength(3);
   });
 
   it('switches tabs from the bottom navigation', async () => {

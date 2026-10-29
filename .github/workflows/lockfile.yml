@@ -71,11 +71,9 @@ jobs:
         run: |
           { node scripts/check-lockfile-registry.mjs package-lock.json && node scripts/check-lockfile-registry.mjs functions/package-lock.json; } 2>&1 | tee ci-logs/lockfile-03-registry-check.log
 
-      - name: Expo SDK compatibility check
-        if: steps.sync.outputs.changed == 'true'
-        run: |
-          npm ci --no-audit --no-fund > ci-logs/lockfile-04-npm-ci.log 2>&1
-          npx expo install --check 2>&1 | tee ci-logs/lockfile-05-expo-install-check.log
+      # Do not gate lockfile publication on Expo compatibility: the CI workflow
+      # validates compatibility *after* npm ci installs the committed lockfiles.
+      # Blocking here deadlocks CI when the old lockfile no longer matches the manifest.
 
       - name: Upload lockfiles and logs
         if: always()

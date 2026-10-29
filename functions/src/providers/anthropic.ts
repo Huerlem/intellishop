@@ -58,14 +58,23 @@ export function createAnthropicProvider(opts: AnthropicOptions): AiProvider {
       if (res.status >= 500 || res.status === 529) throw new ProviderError('unavailable', `AI provider error ${res.status}`);
       if (!res.ok) throw new ProviderError('bad_response', `AI provider status ${res.status}`);
 
-      let body: {
+      type AnthropicBody = {
         model?: string;
         stop_reason?: string | null;
         content?: { type: string; name?: string; input?: unknown }[];
         usage?: { input_tokens?: number; output_tokens?: number };
       };
+      let body: AnthropicBody;
       try {
-        body = await res.json();
+        const decoded: unknown = await res.json();
+        if (!decoded || typeof decoded !== 'object' || Array.isArray(decoded)) {
+          throw new ProviderError('bad_response', 'AI provider returned an invalid object');
+        }
+        const record = decoded as Record<string, unknown>;
+        if (record.content !== undefined && !Array.isArray(record.content)) {
+          throw new ProviderError('bad_response', 'AI provider returned invalid content');
+        }
+        body = decoded as AnthropicBody;
       } catch {
         throw new ProviderError('bad_response', 'AI provider returned invalid JSON');
       }

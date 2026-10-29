@@ -3,7 +3,7 @@
  * Disabled 100:71. Height 48, radius 8, padding 16, Body text, placeholder content/secondary;
  * focus 2 px primary border; error 2 px error border + Caption message below.
  */
-import { forwardRef, useState, type ReactNode } from 'react';
+import { forwardRef, useState, type ElementRef, type ReactNode } from 'react';
 import { TextInput, View, type StyleProp, type TextInputProps, type ViewStyle } from 'react-native';
 
 import { borderWidth, colors, radius, spacing, typography } from '@/src/theme';
@@ -19,7 +19,7 @@ export type TextFieldProps = Omit<TextInputProps, 'style' | 'editable'> & {
   leading?: ReactNode;
 };
 
-export const TextField = forwardRef<TextInput, TextFieldProps>(function TextField(
+export const TextField = forwardRef<ElementRef<typeof TextInput>, TextFieldProps>(function TextField(
   { label, error, hint, disabled = false, containerStyle, leading, onFocus, onBlur, accessibilityLabel, ...input },
   ref
 ) {

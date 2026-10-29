@@ -35,7 +35,7 @@ export function TabsLayout() {
       }}
     >
       {PERMANENT_TABS.map((tab) => (
-        <Tabs.Screen key={tab.name} name={tab.name} options={{ title: tab.title, tabBarIcon: ({ color }) => tabIcon(tab.name, color) }} />
+        <Tabs.Screen key={tab.name} name={tab.name} options={{ title: tab.title, tabBarIcon: ({ color }) => tabIcon(tab.name, String(color)) }} />
       ))}
     </Tabs>
   );

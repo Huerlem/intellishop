@@ -98,7 +98,7 @@ describe('Lists (C6) and List Detail (P02)', () => {
     expect(screen.getByText('The Free plan includes 2 active lists')).toBeTruthy();
     // The native modal hides the underlying screen from RNTL queries while it is open.
     await fireEvent.press(screen.getByLabelText('Dismiss'));
-    await waitFor(() => expect(screen.getByTestId('lists-usage')).toHaveTextContent('2 of 2 active lists'));
+    await waitFor(() => expect(screen.getByTestId('lists-usage')).toHaveTextContent('2 of 2 active lists on the Free plan'));
   });
 
   it('shows the user-price estimate, items already in the Pantry, and starts a shopping trip', async () => {
